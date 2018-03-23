@@ -124,20 +124,21 @@ contract LibBytes {
         }
     }
 
-        /// @dev Tests this library. Reverts if a test fails.
+    /// @dev Tests this library. Reverts if a test fails.
     function test()
+        public pure
     {
         // Create test data
-        bytes memory test = new bytes(20 /* address */ + 32 /* uint256 */);
-        address test_address = 0x692a70d2e424a56d2c6c27aa97d1a86395877b3a;
+        bytes memory test_array = new bytes(20 /* address */ + 32 /* uint256 */);
+        address test_address = address(0x692a70d2e424a56d2c6c27aa97d1a86395877b3a);
         uint256 test_uint256 = 0xab465a225e50f92fc2dcc4db552d658783c141731ac7feb475dd9756030a5d0d;
 
         // Write test data
-        writeAddress(test_address, test, 0);
-        writeUint256(test_uint256, test, 20);
+        writeAddress(test_address, test_array, 0);
+        writeUint256(test_uint256, test_array, 20);
 
         // Validate test data
-        require(test_address == readAddress(test, 0));
-        require(test_uint256 == readUint256(test, 20));
+        require(test_address == readAddress(test_array, 0));
+        require(test_uint256 == readUint256(test_array, 20));
     }
 }
