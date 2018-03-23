@@ -129,7 +129,7 @@ contract LibBytes {
     {
         // Create test data
         bytes memory test = new bytes(20 /* address */ + 32 /* uint256 */);
-        address test_address = 0xb62114c047a01dc3a78e533ed9d964fed7f90576;
+        address test_address = 0x692a70d2e424a56d2c6c27aa97d1a86395877b3a;
         uint256 test_uint256 = 0xab465a225e50f92fc2dcc4db552d658783c141731ac7feb475dd9756030a5d0d;
 
         // Write test data
