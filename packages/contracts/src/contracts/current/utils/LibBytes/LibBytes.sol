@@ -80,4 +80,64 @@ contract LibBytes {
             mstore(add(b, index), xor(input, neighbors))
         }
     }
+
+    /// @dev Reads a uint256 value from a position in a byte array.
+    /// @param b Byte array containing a uint256 value.
+    /// @param index Index in byte array of uint256 value.
+    /// @return uint256 value from byte array.
+    function readUint256(
+        bytes b,
+        uint256 index)
+        public pure
+        returns (uint256 result)
+    {
+        require(b.length >= index + 32);
+
+        // Arrays are prefixed by a 256 bit length parameter
+        index += 32;
+
+        // Read the uint256 from array memory
+        assembly {
+            result := mload(add(b, index))
+        }
+        return result;
+    }
+
+    /// @dev Writes a uint256 into a specific position in a byte array.
+    /// @param input uint256 to put into byte array.
+    /// @param b Byte array to insert <input> into.
+    /// @param index Index in byte array of <input>.
+    function writeUint256(
+        uint256 input,
+        bytes b,
+        uint256 index)
+        public pure
+    {
+        require(b.length >= index + 32);
+
+        // Arrays are prefixed by a 256 bit length parameter
+        index += 32;
+
+        // Read the uint256 from array memory
+        assembly {
+            mstore(add(b, index), input)
+        }
+    }
+
+        /// @dev Tests this library. Reverts if a test fails.
+    function test()
+    {
+        // Create test data
+        bytes memory test = new bytes(20 /* address */ + 32 /* uint256 */);
+        address test_address = 0xb62114c047a01dc3a78e533ed9d964fed7f90576;
+        uint256 test_uint256 = 0xab465a225e50f92fc2dcc4db552d658783c141731ac7feb475dd9756030a5d0d;
+
+        // Write test data
+        writeAddress(test_address, test, 0);
+        writeUint256(test_uint256, test, 20);
+
+        // Validate test data
+        require(test_address == readAddress(test, 0));
+        require(test_uint256 == readUint256(test, 20));
+    }
 }
