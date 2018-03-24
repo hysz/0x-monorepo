@@ -2,15 +2,14 @@ pragma solidity ^0.4.18;
 
 import "./ERC721Basic.sol";
 import "./ERC721Receiver.sol";
-import "../../math/SafeMath.sol";
+import "../../utils/SafeMath/SafeMath.sol";
 import "../../AddressUtils.sol";
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721BasicToken is ERC721Basic {
-  using SafeMath for uint256;
+contract ERC721BasicToken is SafeMath, ERC721Basic {
   using AddressUtils for address;
 
   // Equals to `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
@@ -237,7 +236,7 @@ contract ERC721BasicToken is ERC721Basic {
   function addTokenTo(address _to, uint256 _tokenId) internal {
     require(tokenOwner[_tokenId] == address(0));
     tokenOwner[_tokenId] = _to;
-    ownedTokensCount[_to] = ownedTokensCount[_to].add(1);
+    ownedTokensCount[_to] = safeAdd(ownedTokensCount[_to], 1);
   }
 
   /**
@@ -247,7 +246,7 @@ contract ERC721BasicToken is ERC721Basic {
   */
   function removeTokenFrom(address _from, uint256 _tokenId) internal {
     require(ownerOf(_tokenId) == _from);
-    ownedTokensCount[_from] = ownedTokensCount[_from].sub(1);
+    ownedTokensCount[_from] = safeSub(ownedTokensCount[_from], 1);
     tokenOwner[_tokenId] = address(0);
   }
 

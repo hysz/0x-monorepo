@@ -56,4 +56,18 @@ contract AssetProxyEncoderDecoder is
         require(assetMetadata.length == 21);
         return readAddress(assetMetadata, 1);
     }
+
+    /// @dev Decodes ERC721-encoded byte array for the ERC721 asset proxy.
+    /// @param assetMetadata Byte array encoded for the ERC721 asset proxy.
+    /// @return tokenAddress Address of ERC721 token.
+    /// @return tokenId Id of ERC721 token.
+    function decodeERC721Metadata(bytes assetMetadata)
+        public pure
+        returns (address tokenAddress, uint256 tokenId)
+    {
+        require(assetMetadata.length == 53);
+        tokenAddress = readAddress(assetMetadata, 1);
+        tokenId = readUint256(assetMetadata, 21);
+        return (tokenAddress, tokenId);
+    }
 }

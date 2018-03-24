@@ -36,6 +36,7 @@ export enum AssetProxyId {
     INVALID,
     ERC20_V1,
     ERC20,
+    ERC721,
 }
 
 export interface DefaultOrderParams {
@@ -105,6 +106,8 @@ export enum ContractName {
     AssetTransferProxy = 'AssetTransferProxy',
     ERC20TransferProxy = 'ERC20TransferProxy',
     ERC20TransferProxy_V1 = 'ERC20TransferProxy_v1',
+    ERC721TransferProxy = 'ERC721TransferProxy',
+    DummyERC721Token = 'DummyERC721Token',
 }
 
 export interface Artifact {

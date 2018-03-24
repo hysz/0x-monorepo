@@ -1,7 +1,6 @@
 pragma solidity ^0.4.18;
 
 import "./ERC721.sol";
-import "./DeprecatedERC721.sol";
 import "./ERC721BasicToken.sol";
 
 
@@ -11,7 +10,7 @@ import "./ERC721BasicToken.sol";
  * Moreover, it includes approve all functionality using operator terminology
  * @dev see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721Token is ERC721, ERC721BasicToken {
+contract ERC721Token is SafeMath, ERC721, ERC721BasicToken {
   // Token name
   string internal name_;
 
@@ -129,7 +128,7 @@ contract ERC721Token is ERC721, ERC721BasicToken {
     super.removeTokenFrom(_from, _tokenId);
 
     uint256 tokenIndex = ownedTokensIndex[_tokenId];
-    uint256 lastTokenIndex = ownedTokens[_from].length.sub(1);
+    uint256 lastTokenIndex = safeSub(ownedTokens[_from].length, 1);
     uint256 lastToken = ownedTokens[_from][lastTokenIndex];
 
     ownedTokens[_from][tokenIndex] = lastToken;
@@ -172,7 +171,7 @@ contract ERC721Token is ERC721, ERC721BasicToken {
 
     // Reorg all tokens array
     uint256 tokenIndex = allTokensIndex[_tokenId];
-    uint256 lastTokenIndex = allTokens.length.sub(1);
+    uint256 lastTokenIndex = safeSub(allTokens.length, 1);
     uint256 lastToken = allTokens[lastTokenIndex];
 
     allTokens[tokenIndex] = lastToken;
