@@ -17,39 +17,30 @@
 */
 
 pragma solidity ^0.4.21;
-
-import "../Mintable/Mintable.sol";
+import "../../tokens/ERC721Token/ERC721Token.sol";
 import "../../utils/Ownable/Ownable.sol";
 
-contract DummyERC721Token is Mintable, Ownable {
-    string public name;
-    string public symbol;
-    uint public decimals;
-
+contract DummyERC721Token is
+    Ownable,
+    ERC721Token
+{
     function DummyERC721Token(
-        string _name,
-        string _symbol,
-        uint _decimals,
-        uint _totalSupply)
+        string name,
+        string symbol)
         public
-    {
-        name = _name;
-        symbol = _symbol;
-        decimals = _decimals;
-        totalSupply = _totalSupply;
-        balances[msg.sender] = _totalSupply;
-    }
+        ERC721Token(name, symbol)
+    {}
 
-    function setBalance(address _target, uint _value)
+    /**
+    * @dev Internal function to mint a new token
+    * @dev Reverts if the given token ID already exists
+    * @param to address the beneficiary that will own the minted token
+    * @param tokenId uint256 ID of the token to be minted by the msg.sender
+    */
+    function mint(address to, uint256 tokenId)
         public
         onlyOwner
     {
-        uint currBalance = balanceOf(_target);
-        if (_value < currBalance) {
-            totalSupply = safeSub(totalSupply, safeSub(currBalance, _value));
-        } else {
-            totalSupply = safeAdd(totalSupply, safeSub(_value, currBalance));
-        }
-        balances[_target] = _value;
+        super._mint(to, tokenId);
     }
 }

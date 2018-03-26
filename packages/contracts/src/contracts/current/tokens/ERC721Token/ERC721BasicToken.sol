@@ -159,7 +159,7 @@ contract ERC721BasicToken is SafeMath, ERC721Basic {
   * @param _tokenId uint256 ID of the token to be transferred
   */
   function safeTransferFrom(address _from, address _to, uint256 _tokenId) public canTransfer(_tokenId) {
-    safeTransferFrom(_from, _to, _tokenId, "");
+    safeTransferFromWithData(_from, _to, _tokenId, "");
   }
 
   /**
@@ -174,7 +174,10 @@ contract ERC721BasicToken is SafeMath, ERC721Basic {
   * @param _tokenId uint256 ID of the token to be transferred
   * @param _data bytes data to send along with a safe transfer check
   */
-  function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) public canTransfer(_tokenId) {
+
+  // TODO: Fix 0x tests to work with overloading interfaces.
+  //       For now, we have renamed this from `safeTransferFrom` to `safeTransferFromWithData`
+  function safeTransferFromWithData(address _from, address _to, uint256 _tokenId, bytes _data) public canTransfer(_tokenId) {
     transferFrom(_from, _to, _tokenId);
     require(checkAndCallSafeTransfer(_from, _to, _tokenId, _data));
   }

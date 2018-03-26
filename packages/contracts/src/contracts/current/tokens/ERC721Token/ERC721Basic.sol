@@ -21,5 +21,8 @@ contract ERC721Basic {
 
   function transferFrom(address _from, address _to, uint256 _tokenId) public;
   function safeTransferFrom(address _from, address _to, uint256 _tokenId) public;
-  function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) public;
+
+  // TODO: Fix 0x tests to work with overloading interfaces.
+  //       For now, we have renamed this from `safeTransferFrom` to `safeTransferFromWithData`
+  function safeTransferFromWithData(address _from, address _to, uint256 _tokenId, bytes _data) public;
 }
