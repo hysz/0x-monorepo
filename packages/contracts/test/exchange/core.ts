@@ -70,14 +70,18 @@ describe('Exchange', () => {
         const accounts = await web3Wrapper.getAvailableAddressesAsync();
         makerAddress = accounts[0];
         [tokenOwner, takerAddress, feeRecipientAddress, assetProxyManagerAddress] = accounts;
-        const [repInstance, dgdInstance, zrxInstance] = await Promise.all([
+        const [repInstance, dgdInstance, zrxInstance, ckInstance, etInstance] = await Promise.all([
             deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS),
             deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS),
             deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS),
+            deployer.deployAsync(ContractName.DummyERC721Token, constants.DUMMY_ERC721TOKEN_ARGS),
+            deployer.deployAsync(ContractName.DummyERC721Token, constants.DUMMY_ERC721TOKEN_ARGS),
         ]);
         rep = new DummyTokenContract(web3Wrapper, repInstance.abi, repInstance.address);
         dgd = new DummyTokenContract(web3Wrapper, dgdInstance.abi, dgdInstance.address);
         zrx = new DummyTokenContract(web3Wrapper, zrxInstance.abi, zrxInstance.address);
+        ck = new DummyERC721TokenContract(web3Wrapper, ckInstance.abi, ckInstance.address);
+        et = new DummyERC721TokenContract(web3Wrapper, etInstance.abi, etInstance.address);
         const tokenTransferProxyInstance = await deployer.deployAsync(ContractName.TokenTransferProxy);
         tokenTransferProxy = new TokenTransferProxyContract(
             web3Wrapper,
@@ -209,6 +213,12 @@ describe('Exchange', () => {
             expect((exchange as any).transferViaTokenTransferProxy).to.be.undefined();
         });
     });
+
+    describe.only('Testing NFTs', () => {
+        it('should successfully exchange two NFTs', () => {
+            
+        });
+    })
 
     describe('fillOrder', () => {
         beforeEach(async () => {
