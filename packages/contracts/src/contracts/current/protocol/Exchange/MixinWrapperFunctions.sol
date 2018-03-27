@@ -62,11 +62,12 @@ contract MixinWrapperFunctions is
         uint256 takerFeeAmount;
         uint256 expirationTimeSeconds;
         uint256 salt;
+        /*
         uint256 offset;
         uint256 len;
         bytes32 v0;
-        bytes32 v1;
-        //bytes makerAssetProxyMetadata;
+        bytes32 v1;*/
+        bytes makerAssetProxyMetadata;
     }
 
     event GLog(
@@ -76,12 +77,24 @@ contract MixinWrapperFunctions is
         bytes32 v1
     );
 
-    function gregOrder(GOrder order)
+    function gregOrder//(GOrder order)
+(
+    address makerAddress,
+    /*
+    uint256 offset;
+    uint256 len;
+    bytes32 v0;
+    bytes32 v1;*/
+    bytes makerAssetProxyMetadata
+
+    )
+
+
         public view
         returns (bytes32)
     {
         //emit LogGregsss( bytes32(14) );
-        emit GLog(order.offset, order.len, order.v0, order.v1);
+        ///emit GLog(order.offset, order.len, order.v0, order.v1);
         return bytes32(14);
     }
 
@@ -131,7 +144,7 @@ contract MixinWrapperFunctions is
 
             // Write order struct
             mstore(add(start, 4), mload(order))             // makerAddress
-            mstore(add(start, 36), mload(add(order, 32)))   // takerAddress
+            /*mstore(add(start, 36), mload(add(order, 32)))   // takerAddress
             mstore(add(start, 68), mload(add(order, 64)))   // makerTokenAddress
             mstore(add(start, 100), mload(add(order, 96)))  // takerTokenAddress
             mstore(add(start, 132), mload(add(order, 128))) // feeRecipientAddress
@@ -140,9 +153,9 @@ contract MixinWrapperFunctions is
             mstore(add(start, 228), mload(add(order, 224))) // makerFeeAmount
             mstore(add(start, 260), mload(add(order, 256))) // takerFeeAmount
             mstore(add(start, 292), mload(add(order, 288))) // expirationTimeSeconds
-            mstore(add(start, 324), mload(add(order, 320))) // salt
+            mstore(add(start, 324), mload(add(order, 320))) // salt*/
 
-            let sOffset := add(324, 32)
+            let sOffset := add(/*324*/4, 32)
             let oOffset := add(320, 32) // I am a dummy location @+352
 
             //mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
