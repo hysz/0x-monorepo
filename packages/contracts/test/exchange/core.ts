@@ -294,6 +294,7 @@ describe('Exchange', () => {
                 takerTokenAmount: new BigNumber(1),
                 makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
                 takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+                salt: new BigNumber(105)
             });
 
             console.log("---------");
@@ -311,7 +312,7 @@ describe('Exchange', () => {
             expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
 
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
-            const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
             for(var i = 0; i < res.logs.length; ++i) {
                     const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
                     console.log(log);

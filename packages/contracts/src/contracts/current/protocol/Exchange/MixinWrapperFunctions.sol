@@ -22,11 +22,16 @@ pragma experimental ABIEncoderV2;
 import "./mixins/MExchangeCore.sol";
 import "../../utils/SafeMath/SafeMath.sol";
 
+
 /// @dev Consumes MExchangeCore
 contract MixinWrapperFunctions is
     MExchangeCore,
     SafeMath
 {
+
+    event LogGregsss(
+        bytes32 value
+    );
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
     /// @param signature Maker's signature of the order.
@@ -100,36 +105,72 @@ contract MixinWrapperFunctions is
             mstore(add(start, 260), mload(add(order, 256))) // takerFeeAmount
             mstore(add(start, 292), mload(add(order, 288))) // expirationTimeSeconds
             mstore(add(start, 324), mload(add(order, 320))) // salt
-            mstore(add(start, 356), mload(add(order, 352))) // makerAssetProxyId
-            mstore(add(start, 388), mload(add(order, 384))) // takerAssetProxyId
+
+            let sOffset := add(324, 32)
+            let oOffset := add(320, 32) // I am a dummy location @+352
+            oOffset := add(oOffset, 32) // I am a dummy location @+384
+            oOffset := add(oOffset, 32) // I hold makerAssetProxyData length
+
+            // makerAsssetProxyData
+            let makerAPDLen := mload(add(order, oOffset))  // Read makerAssetProxyData length
+            oOffset := add(oOffset, 32)
+            let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
+            mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
+            sOffset := add(sOffset, 32)
+            mstore(add(start, sOffset), makerAPDLen)     // Write makerAssetProxyData length
+            sOffset := add(sOffset, 32)
+            for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
+                mstore(add(start, sOffset), mload(add(order, oOffset)))
+                sOffset := add(sOffset, 32)
+                oOffset := add(oOffset, 32)
+            }
+
+            // takerAsssetProxyData
+            let takerAPDLen := mload(add(order, oOffset))   // Read takerAssetProxyData length
+            oOffset := add(oOffset, 32)
+            let takerADPLenWords := add(div(takerAPDLen, 32), gt(mod(takerAPDLen, 32), 0))
+            mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
+            sOffset := add(sOffset, 32)
+            mstore(add(start, sOffset), takerAPDLen)     // Write takerAssetProxyData length
+            sOffset := add(sOffset, 32)
+            for {let j := 0} lt(j, takerADPLenWords) {j := add(j, 1)} { // write takerAssetProxyData contents
+                mstore(add(start, sOffset), mload(add(order, oOffset)))
+                sOffset := add(sOffset, 32)
+                oOffset := add(oOffset, 32)
+            }
 
             // Write takerTokenFillAmount
-            mstore(add(start, 420), takerTokenFillAmount)
+            mstore(add(start, sOffset), takerTokenFillAmount)
+            sOffset := add(sOffset, 32)
 
             // Write signature offset
-            mstore(add(start, 452), 480)
+            mstore(add(start, sOffset), add(sOffset, 28))
+            sOffset := add(sOffset, 32)
 
             // Write signature length
             let sigLen := mload(signature)
-            mstore(add(start, 484), sigLen)
+            mstore(add(start, sOffset), sigLen)
+            sOffset := add(sOffset, 32)
 
             // Calculate signature length with padding
             let paddingLen := mod(sub(0, sigLen), 32)
             let sigLenWithPadding := add(sigLen, paddingLen)
+
+            takerTokenFilledAmount := takerADPLenWords
 
             // Write signature
             let sigStart := add(signature, 32)
             for { let curr := 0 }
             lt(curr, sigLenWithPadding)
             { curr := add(curr, 32) }
-            { mstore(add(start, add(516, curr)), mload(add(sigStart, curr))) } // Note: we assume that padding consists of only 0's
-
+            { mstore(add(start, add(sOffset, curr)), mload(add(sigStart, curr))) } // Note: we assume that padding consists of only 0's
+/*
             // Execute delegatecall
             let success := delegatecall(
                 gas,                         // forward all gas, TODO: look into gas consumption of assert/throw
                 address,                     // call address of this contract
                 start,                       // pointer to start of input
-                add(516, sigLenWithPadding), // input length is  484 + signature length + padding length
+                add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
                 start,                       // write output over input
                 32                           // output size is 32 bytes
             )
@@ -139,9 +180,9 @@ contract MixinWrapperFunctions is
             }
             case 1 {
                 takerTokenFilledAmount := mload(start)
-            }
-
+            }*/
         }
+        emit LogGregsss(bytes32(takerTokenFilledAmount));
         return takerTokenFilledAmount;
     }
 
