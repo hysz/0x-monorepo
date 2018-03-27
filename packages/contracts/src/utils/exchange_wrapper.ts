@@ -76,6 +76,7 @@ export class ExchangeWrapper {
             { from },
         );
         const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
+        console.log(tx);
         return tx;
     }
     public async batchFillOrdersAsync(

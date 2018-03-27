@@ -50,6 +50,42 @@ contract MixinWrapperFunctions is
         );
     }
 
+    struct GOrder {
+        address makerAddress;
+        address takerAddress;
+        address makerTokenAddress;
+        address takerTokenAddress;
+        address feeRecipientAddress;
+        uint256 makerTokenAmount;
+        uint256 takerTokenAmount;
+        uint256 makerFeeAmount;
+        uint256 takerFeeAmount;
+        uint256 expirationTimeSeconds;
+        uint256 salt;
+        uint256 offset;
+        uint256 len;
+        bytes32 v0;
+        bytes32 v1;
+        //bytes makerAssetProxyMetadata;
+    }
+
+    event GLog(
+        uint256 offset,
+        uint256 len,
+        bytes32 v0,
+        bytes32 v1
+    );
+
+    function gregOrder(GOrder order)
+        public view
+        returns (bytes32)
+    {
+        //emit LogGregsss( bytes32(14) );
+        emit GLog(order.offset, order.len, order.v0, order.v1);
+        return bytes32(14);
+    }
+
+
     /// @dev Fills an order with specified parameters and ECDSA signature. Returns false if the transaction would otherwise revert.
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
@@ -84,7 +120,7 @@ contract MixinWrapperFunctions is
 
         // [1]: https://solidity.readthedocs.io/en/develop/abi-spec.html
 
-        bytes4 fillOrderSelector = this.fillOrder.selector;
+        bytes4 fillOrderSelector = this.gregOrder.selector;
 
         assembly {
             // Load free memory pointer
@@ -109,20 +145,20 @@ contract MixinWrapperFunctions is
             let sOffset := add(324, 32)
             let oOffset := add(320, 32) // I am a dummy location @+352
 
-            mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
-            sOffset := add(sOffset, 32)
+            //mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
+            //sOffset := add(sOffset, 32)
             oOffset := add(oOffset, 32) // I am a dummy location @+384
 
-            mstore(add(start, sOffset), mload(add(order, oOffset)))
-            sOffset := add(sOffset, 32)
+            //mstore(add(start, sOffset), mload(add(order, oOffset)))
+            //sOffset := add(sOffset, 32)
             oOffset := add(oOffset, 32) // I hold makerAssetProxyData length
 
             // makerAsssetProxyData
             let makerAPDLen := mload(add(order, oOffset))  // Read makerAssetProxyData length
             oOffset := add(oOffset, 32)
             let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
-            //mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
-            //sOffset := add(sOffset, 32)
+            mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
+            sOffset := add(sOffset, 32)
             mstore(add(start, sOffset), makerAPDLen)     // Write makerAssetProxyData length
             sOffset := add(sOffset, 32)
             for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
@@ -130,13 +166,13 @@ contract MixinWrapperFunctions is
                 sOffset := add(sOffset, 32)
                 oOffset := add(oOffset, 32)
             }
-
+/*
             // takerAsssetProxyData
             let takerAPDLen := mload(add(order, oOffset))   // Read takerAssetProxyData length
             oOffset := add(oOffset, 32)
             let takerADPLenWords := add(div(takerAPDLen, 32), gt(mod(takerAPDLen, 32), 0))
-            //mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
-            //sOffset := add(sOffset, 32)
+            mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
+            sOffset := add(sOffset, 32)
             mstore(add(start, sOffset), takerAPDLen)     // Write takerAssetProxyData length
             sOffset := add(sOffset, 32)
             for {let j := 0} lt(j, takerADPLenWords) {j := add(j, 1)} { // write takerAssetProxyData contents
@@ -144,7 +180,7 @@ contract MixinWrapperFunctions is
                 sOffset := add(sOffset, 32)
                 oOffset := add(oOffset, 32)
             }
-
+/*
             // Write takerTokenFillAmount
             mstore(add(start, sOffset), takerTokenFillAmount)
             sOffset := add(sOffset, 32)
@@ -170,22 +206,23 @@ contract MixinWrapperFunctions is
             lt(curr, sigLenWithPadding)
             { curr := add(curr, 32) }
             { mstore(add(start, add(sOffset, curr)), mload(add(sigStart, curr))) } // Note: we assume that padding consists of only 0's
-
+*/
             // Execute delegatecall
             let success := delegatecall(
                 gas,                         // forward all gas, TODO: look into gas consumption of assert/throw
                 address,                     // call address of this contract
                 start,                       // pointer to start of input
-                add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
+                //add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
+                sOffset,
                 start,                       // write output over input
                 32                           // output size is 32 bytes
             )
             switch success
             case 0 {
-                takerTokenFilledAmount := 0
+                takerTokenFilledAmount := 0x0
             }
             case 1 {
-                takerTokenFilledAmount := mload(start)
+                takerTokenFilledAmount := 0x69 //mload(start)
             }
         }
         emit LogGregsss(bytes32(takerTokenFilledAmount));
