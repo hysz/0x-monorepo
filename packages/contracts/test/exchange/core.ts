@@ -33,6 +33,9 @@ import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
 import {AssetTransferMetadataStruct, encodeAssetTransferMetadata} from '../../src/utils/asset_transfer_proxy';
 
+//import * as ethersContracts from '@0xproject/ethers-utils';
+
+
 import * as _ from 'lodash';
 
 chaiSetup.configure();
@@ -255,13 +258,14 @@ describe('Exchange', () => {
             }) as AssetTransferMetadataStruct;
             var encodedMakerMetadata = encodeAssetTransferMetadata(makerMetadata);
 
-            const txHash = await erc721TransferProxy.logMetadata.sendTransactionAsync(String.fromCharCode.apply(null, encodedMakerMetadata));
+            console.log(encodedMakerMetadata);
+            const txHash = await erc721TransferProxy.logMetadata.sendTransactionAsync(encodedMakerMetadata, { from: makerAddress });
             const tx = await zeroEx.awaitTransactionMinedAsync(txHash);
-            //tx.logs = _.filter(tx.logs, log => log.address === this._exchange.address);
+            //tx.logs = _.filter(tx.logs, log => log.address === erc721TransferProxy.address);
             var _logDecoder: LogDecoder = new LogDecoder(constants.TESTRPC_NETWORK_ID);
             tx.logs = _.map(tx.logs, log => _logDecoder.decodeLogOrThrow(log));
 
-
+/*
             for(var i = 0; i < tx.logs.length; ++i) {
                     const log = logDecoder.decodeLogOrThrow(tx.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
                     console.log(log);
@@ -299,7 +303,7 @@ describe('Exchange', () => {
             const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
             expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
             const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
-            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);*/
         });
     })
 
