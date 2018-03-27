@@ -62,11 +62,6 @@ contract MixinWrapperFunctions is
         uint256 takerFeeAmount;
         uint256 expirationTimeSeconds;
         uint256 salt;
-        /*
-        uint256 offset;
-        uint256 len;
-        bytes32 v0;
-        bytes32 v1;*/
         bytes makerAssetProxyMetadata;
     }
 
@@ -77,19 +72,7 @@ contract MixinWrapperFunctions is
         bytes32 v1
     );
 
-    function gregOrder//(GOrder order)
-(
-    address makerAddress,
-    /*
-    uint256 offset;
-    uint256 len;
-    bytes32 v0;
-    bytes32 v1;*/
-    bytes makerAssetProxyMetadata
-
-    )
-
-
+    function gregOrder(GOrder order)
         public view
         returns (bytes32)
     {
@@ -141,6 +124,46 @@ contract MixinWrapperFunctions is
 
             // Write function signature
             mstore(start, fillOrderSelector)
+            let parameters := 0x4
+            let data := 0x60 // // 0x20 for each of the 3 parameters
+            let dataOffset := data
+            let orderOffset := order
+            let orderLen := mul(13, 0x20) // 0x20 for each of the 13 parameters
+
+            // Write 3 parameters to memory
+            mstore(parameters, dataOffset)
+
+            // Copy parameters from Order
+            for{let i := 0} lt(i, 13) {i := add(i, 1)} {
+                mstore(dataOffset, mload(orderOffset))
+                dataOffset := add(dataOffset, 0x20)
+                orderOffset := add(orderOffset, 0x20)
+            }
+
+            // Write <makerAssetProxyMetadata> to memory
+            let makerAPDLen := mload(orderOffset)  // Read makerAssetProxyData length
+            orderOffset := add(orderOffset, 32)
+            let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
+            //mstore(add(start, ), add(sOffset, 28)) // Write makerAssetProxyData offset
+            //sOffset := add(sOffset, 32)
+            mstore(dataOffset, makerAPDLen)     // Write makerAssetProxyData length
+            dataOffset := add(dataOffset, 0x20)
+            for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
+                mstore(dataOffset, mload(orderOffset))
+                dataOffset := add(dataOffset, 0x20)
+                orderOffset := add(orderOffset, 0x20)
+            }
+            // Record Length
+            mstore(add(data, mul(12, 0x20)), makerAPDLen)
+
+/*
+            // Copy 2 dynamic parameters from Order
+            for{let i := 0} lt(i, 2) {i := add(i, 1)} {
+                mstore(dataOffset, add(data, mul(0x2, i)))
+            }
+
+            startOffset := add(startOffset, 0x20)
+
 
             // Write order struct
             mstore(add(start, 4), mload(order))             // makerAddress
@@ -153,9 +176,9 @@ contract MixinWrapperFunctions is
             mstore(add(start, 228), mload(add(order, 224))) // makerFeeAmount
             mstore(add(start, 260), mload(add(order, 256))) // takerFeeAmount
             mstore(add(start, 292), mload(add(order, 288))) // expirationTimeSeconds
-            mstore(add(start, 324), mload(add(order, 320))) // salt*/
+            mstore(add(start, 324), mload(add(order, 320))) // salt
 
-            let sOffset := add(/*324*/4, 32)
+            let sOffset := add(4, 32)
             let oOffset := add(320, 32) // I am a dummy location @+352
 
             //mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
@@ -226,7 +249,7 @@ contract MixinWrapperFunctions is
                 address,                     // call address of this contract
                 start,                       // pointer to start of input
                 //add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
-                sOffset,
+                dataOffset,
                 start,                       // write output over input
                 32                           // output size is 32 bytes
             )
