@@ -31,6 +31,9 @@ import { BalancesByOwner, ContractName, ExchangeContractErrs, SignatureType, Sig
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
+import {AssetTransferMetadataStruct, encodeAssetTransferMetadata} from '../../src/utils/asset_transfer_proxy';
+
+import * as _ from 'lodash';
 
 chaiSetup.configure();
 const expect = chai.expect;
@@ -63,6 +66,8 @@ describe('Exchange', () => {
     let exWrapper: ExchangeWrapper;
     let dmyBalances: Balances;
     let orderFactory: OrderFactory;
+
+    let erc721TransferProxyInstance: Web3.ContractInstance;
 
     let zeroEx: ZeroEx;
 
@@ -105,7 +110,7 @@ describe('Exchange', () => {
             erc20TransferProxyInstance.address,
         );
 
-        const erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
+         erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
         erc721TransferProxy = new ERC721TransferProxyContract(
             web3Wrapper,
             erc721TransferProxyInstance.abi,
@@ -243,6 +248,30 @@ describe('Exchange', () => {
 
     describe.only('Testing NFTs', () => {
         it('should successfully exchange two NFTs', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+            var encodedMakerMetadata = encodeAssetTransferMetadata(makerMetadata);
+
+            const txHash = await erc721TransferProxy.logMetadata.sendTransactionAsync(String.fromCharCode.apply(null, encodedMakerMetadata));
+            const tx = await zeroEx.awaitTransactionMinedAsync(txHash);
+            //tx.logs = _.filter(tx.logs, log => log.address === this._exchange.address);
+            var _logDecoder: LogDecoder = new LogDecoder(constants.TESTRPC_NETWORK_ID);
+            tx.logs = _.map(tx.logs, log => _logDecoder.decodeLogOrThrow(log));
+
+
+            for(var i = 0; i < tx.logs.length; ++i) {
+                    const log = logDecoder.decodeLogOrThrow(tx.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
+                    console.log(log);
+                    console.log();
+                    console.log();
+            }
+
+
+            //console.log(encodedMakerMetadata);
+
             signedOrder = orderFactory.newSignedOrder({
                 makerTokenAddress: ck.address,
                 takerTokenAddress: ck.address,
