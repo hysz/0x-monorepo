@@ -63,21 +63,29 @@ contract MixinWrapperFunctions is
         uint256 expirationTimeSeconds;
         uint256 salt;
         bytes makerAssetProxyMetadata;
+        //bytes takerAssetProxyMetadata;
     }
 
     event GLog(
-        uint256 offset,
-        uint256 len,
-        bytes32 v0,
-        bytes32 v1
+        bytes32 len,
+        uint8 first,
+        bytes32 len2,
+        uint8 first2
     );
 
-    function gregOrder(GOrder order)
+    event GLog2(
+        bytes32 len,
+       bytes32 len2
+    );
+
+
+    function gregOrder(GOrder order)//, uint256 takerTokenFillAmount, bytes signature)
         public view
         returns (bytes32)
     {
         //emit LogGregsss( bytes32(14) );
-        ///emit GLog(order.offset, order.len, order.v0, order.v1);
+        //emit GLog(bytes32(order.makerAssetProxyMetadata.length), uint8(order.makerAssetProxyMetadata[0]), bytes32(order.takerAssetProxyMetadata.length), uint8(order.takerAssetProxyMetadata[1]));
+        emit GLog2(bytes32(order.makerAssetProxyMetadata.length), bytes32(order.makerAssetProxyMetadata.length));
         return bytes32(14);
     }
 
@@ -124,14 +132,18 @@ contract MixinWrapperFunctions is
 
             // Write function signature
             mstore(start, fillOrderSelector)
-            let parameters := 0x4
-            let data := 0x60 // // 0x20 for each of the 3 parameters
+            let parameters := add(start, 0x4)
+            let parametersOffset := parameters
+            let data := add(parameters, mul(3, 0x20)) // 0x20 for each parameter
             let dataOffset := data
             let orderOffset := order
             let orderLen := mul(13, 0x20) // 0x20 for each of the 13 parameters
+            let bytesLen := 0
+            let bytesLenPadded := 0
 
-            // Write 3 parameters to memory
-            mstore(parameters, dataOffset)
+            // Write memory location of Order, relative to the start of the parameter list
+            mstore(parametersOffset, sub(dataOffset, parameters))
+            parametersOffset := add(parametersOffset, 0x20)
 
             // Copy parameters from Order
             for{let i := 0} lt(i, 13) {i := add(i, 1)} {
@@ -141,21 +153,52 @@ contract MixinWrapperFunctions is
             }
 
             // Write <makerAssetProxyMetadata> to memory
-            let makerAPDLen := mload(orderOffset)  // Read makerAssetProxyData length
-            orderOffset := add(orderOffset, 32)
-            let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
-            //mstore(add(start, ), add(sOffset, 28)) // Write makerAssetProxyData offset
-            //sOffset := add(sOffset, 32)
-            mstore(dataOffset, makerAPDLen)     // Write makerAssetProxyData length
+            mstore(add(data, mul(11, 0x20)), sub(dataOffset, parameters))
+            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
+            orderOffset := add(orderOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
+            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
             dataOffset := add(dataOffset, 0x20)
-            for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
                 mstore(dataOffset, mload(orderOffset))
                 dataOffset := add(dataOffset, 0x20)
                 orderOffset := add(orderOffset, 0x20)
             }
-            // Record Length
-            mstore(add(data, mul(12, 0x20)), makerAPDLen)
 
+
+            // Write <takerAssetProxyMetadata> to memory
+            mstore(add(data, mul(12, 0x20)), sub(dataOffset, parameters))
+            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
+            orderOffset := add(orderOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
+            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
+            dataOffset := add(dataOffset, 0x20)
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
+                mstore(dataOffset, mload(orderOffset))
+                dataOffset := add(dataOffset, 0x20)
+                orderOffset := add(orderOffset, 0x20)
+            }
+/*
+            // Write <takerTokenFillAmount>
+            mstore(parameters, takerTokenFillAmount)
+            parameters := add(parameters, 0x20)
+
+            // Write <signature> location to parameter list
+            mstore(parameters, dataOffset)
+            parameters := add(parameters, 0x20)
+
+            // Write signature
+            bytesLen := mload(signature)  // Read makerAssetProxyData length
+            let sigOffset := add(signature, 32)
+            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
+            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
+            dataOffset := add(dataOffset, 0x20)
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
+                mstore(dataOffset, mload(sigOffset))
+                dataOffset := add(dataOffset, 0x20)
+                sigOffset := add(sigOffset, 0x20)
+            }
+*/
 /*
             // Copy 2 dynamic parameters from Order
             for{let i := 0} lt(i, 2) {i := add(i, 1)} {
@@ -249,13 +292,13 @@ contract MixinWrapperFunctions is
                 address,                     // call address of this contract
                 start,                       // pointer to start of input
                 //add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
-                dataOffset,
+                sub(dataOffset, start),
                 start,                       // write output over input
                 32                           // output size is 32 bytes
             )
             switch success
             case 0 {
-                takerTokenFilledAmount := 0x0
+                takerTokenFilledAmount := bytesLen
             }
             case 1 {
                 takerTokenFilledAmount := 0x69 //mload(start)
