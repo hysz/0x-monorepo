@@ -108,15 +108,21 @@ contract MixinWrapperFunctions is
 
             let sOffset := add(324, 32)
             let oOffset := add(320, 32) // I am a dummy location @+352
+
+            mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
+            sOffset := add(sOffset, 32)
             oOffset := add(oOffset, 32) // I am a dummy location @+384
+
+            mstore(add(start, sOffset), mload(add(order, oOffset)))
+            sOffset := add(sOffset, 32)
             oOffset := add(oOffset, 32) // I hold makerAssetProxyData length
 
             // makerAsssetProxyData
             let makerAPDLen := mload(add(order, oOffset))  // Read makerAssetProxyData length
             oOffset := add(oOffset, 32)
             let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
-            mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
-            sOffset := add(sOffset, 32)
+            //mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
+            //sOffset := add(sOffset, 32)
             mstore(add(start, sOffset), makerAPDLen)     // Write makerAssetProxyData length
             sOffset := add(sOffset, 32)
             for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
@@ -129,8 +135,8 @@ contract MixinWrapperFunctions is
             let takerAPDLen := mload(add(order, oOffset))   // Read takerAssetProxyData length
             oOffset := add(oOffset, 32)
             let takerADPLenWords := add(div(takerAPDLen, 32), gt(mod(takerAPDLen, 32), 0))
-            mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
-            sOffset := add(sOffset, 32)
+            //mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
+            //sOffset := add(sOffset, 32)
             mstore(add(start, sOffset), takerAPDLen)     // Write takerAssetProxyData length
             sOffset := add(sOffset, 32)
             for {let j := 0} lt(j, takerADPLenWords) {j := add(j, 1)} { // write takerAssetProxyData contents
@@ -156,7 +162,7 @@ contract MixinWrapperFunctions is
             let paddingLen := mod(sub(0, sigLen), 32)
             let sigLenWithPadding := add(sigLen, paddingLen)
 
-            takerTokenFilledAmount := takerADPLenWords
+            takerTokenFilledAmount := takerAPDLen
 
             // Write signature
             let sigStart := add(signature, 32)
@@ -164,7 +170,7 @@ contract MixinWrapperFunctions is
             lt(curr, sigLenWithPadding)
             { curr := add(curr, 32) }
             { mstore(add(start, add(sOffset, curr)), mload(add(sigStart, curr))) } // Note: we assume that padding consists of only 0's
-/*
+
             // Execute delegatecall
             let success := delegatecall(
                 gas,                         // forward all gas, TODO: look into gas consumption of assert/throw
@@ -180,7 +186,7 @@ contract MixinWrapperFunctions is
             }
             case 1 {
                 takerTokenFilledAmount := mload(start)
-            }*/
+            }
         }
         emit LogGregsss(bytes32(takerTokenFilledAmount));
         return takerTokenFilledAmount;
