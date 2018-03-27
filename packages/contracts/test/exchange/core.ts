@@ -203,6 +203,8 @@ describe('Exchange', () => {
 
             // Distribute NFTs to maker & taker
             // maker owns [0x0000.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
+            ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
+            ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),
@@ -213,6 +215,9 @@ describe('Exchange', () => {
             ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x7070707070707070707070707070707070707070707070707070707070707070'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x8080808080808080808080808080808080808080808080808080808080808080'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'), { from: tokenOwner }),
+
+            et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
+            et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),

@@ -136,7 +136,7 @@ contract ERC721BasicToken is SafeMath, ERC721Basic {
   * @param _to address to receive the ownership of the given token ID
   * @param _tokenId uint256 ID of the token to be transferred
   */
-  function transferFrom(address _from, address _to, uint256 _tokenId) public /*canTransfer(_tokenId)*/ {
+  function transferFrom(address _from, address _to, uint256 _tokenId) public canTransfer(_tokenId) {
     require(_from != address(0));
     require(_to != address(0));
 
