@@ -29,15 +29,18 @@ contract DummyERC721Token is
         string symbol)
         public
         ERC721Token(name, symbol)
+    {}
+
+    /**
+    * @dev Internal function to mint a new token
+    * @dev Reverts if the given token ID already exists
+    * @param to address the beneficiary that will own the minted token
+    * @param tokenId uint256 ID of the token to be minted by the msg.sender
+    */
+    function mint(address to, uint256 tokenId)
+        public
+        onlyOwner
     {
-        super._mint(msg.sender, 0x1010101010101010101010101010101010101010101010101010101010101010);
-        super._mint(msg.sender, 0x2020202020202020202020202020202020202020202020202020202020202020);
-        super._mint(msg.sender, 0x3030303030303030303030303030303030303030303030303030303030303030);
-        super._mint(msg.sender, 0x4040404040404040404040404040404040404040404040404040404040404040);
-        super._mint(msg.sender, 0x5050505050505050505050505050505050505050505050505050505050505050);
-        super._mint(msg.sender, 0x6060606060606060606060606060606060606060606060606060606060606060);
-        super._mint(msg.sender, 0x7070707070707070707070707070707070707070707070707070707070707070);
-        super._mint(msg.sender, 0x8080808080808080808080808080808080808080808080808080808080808080);
-        super._mint(msg.sender, 0x9090909090909090909090909090909090909090909090909090909090909090);
+        super._mint(to, tokenId);
     }
 }

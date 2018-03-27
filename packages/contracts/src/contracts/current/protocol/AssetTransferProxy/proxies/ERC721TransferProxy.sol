@@ -47,7 +47,9 @@ contract ERC721TransferProxy is
         address token;
         uint256 tokenId;
         (token, tokenId) = decodeERC721Metadata(assetMetadata);
-        //require(ERC721Token(token).transferFrom(from, to, tokenId));
+
+        // Todo: NoThrow
+        ERC721Token(token).transferFrom(from, to, amount);
         return true;
     }
 }

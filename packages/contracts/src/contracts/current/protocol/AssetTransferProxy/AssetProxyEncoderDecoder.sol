@@ -65,9 +65,11 @@ contract AssetProxyEncoderDecoder is
         public pure
         returns (address tokenAddress, uint256 tokenId)
     {
-        require(assetMetadata.length == 53);
+        //require(assetMetadata.length == 53);
+        //tokenAddress = readAddress(assetMetadata, 1);
+        //tokenId = readUint256(assetMetadata, 21);
+        require(assetMetadata.length == 21);
         tokenAddress = readAddress(assetMetadata, 1);
-        tokenId = readUint256(assetMetadata, 21);
         return (tokenAddress, tokenId);
     }
 }

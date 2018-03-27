@@ -67,6 +67,11 @@ contract MixinSettlementProxy is
         ZRX_TOKEN_PROXY_ID = zrxTokenProxyId;
     }
 
+    event LogGreg(
+            uint256 makerTokenAmount,
+            uint256 takerTokenAmount
+    );
+
     function settleOrder(
         Order order,
         address takerAddress,
@@ -78,8 +83,11 @@ contract MixinSettlementProxy is
             uint256 takerFeeAmountPaid
         )
     {
-        makerTokenFilledAmount = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
+        makerTokenFilledAmount = order.makerTokenAmount;//getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
         bytes32 orderHash = getOrderHash(order);
+
+
+        emit LogGreg(order.makerTokenAmount, order.takerTokenAmount);
 
         require(
             TRANSFER_PROXY.transferFrom(
@@ -98,7 +106,7 @@ contract MixinSettlementProxy is
                 takerTokenFilledAmount
             )
         );
-        if (order.feeRecipientAddress != address(0)) {
+        /*if (order.feeRecipientAddress != address(0)) {
             if (order.makerFeeAmount > 0) {
                 makerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerFeeAmount);
                 require(
@@ -121,7 +129,7 @@ contract MixinSettlementProxy is
                     )
                 );
             }
-        }
+        }*/
         return (makerTokenFilledAmount, makerFeeAmountPaid, takerFeeAmountPaid);
     }
 }

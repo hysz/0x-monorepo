@@ -141,6 +141,8 @@ contract MixinExchangeCore is
         var (makerTokenFilledAmount, makerFeeAmountPaid, takerFeeAmountPaid) =
             settleOrder(order, msg.sender, takerTokenFilledAmount);
 
+                            return 0;
+
         // Log order
         LogFill(
             order.makerAddress,

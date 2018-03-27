@@ -200,6 +200,28 @@ describe('Exchange', () => {
             }),
             zrx.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             zrx.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner }),
+
+            // Distribute NFTs to maker & taker
+            // maker owns [0x0000.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
+            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x3030303030303030303030303030303030303030303030303030303030303030'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x4040404040404040404040404040404040404040404040404040404040404040'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x5050505050505050505050505050505050505050505050505050505050505050'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x6060606060606060606060606060606060606060606060606060606060606060'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x7070707070707070707070707070707070707070707070707070707070707070'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x8080808080808080808080808080808080808080808080808080808080808080'), { from: tokenOwner }),
+            ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x3030303030303030303030303030303030303030303030303030303030303030'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(takerAddress, new BigNumber('0x5050505050505050505050505050505050505050505050505050505050505050'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(takerAddress, new BigNumber('0x6060606060606060606060606060606060606060606060606060606060606060'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(takerAddress, new BigNumber('0x7070707070707070707070707070707070707070707070707070707070707070'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(takerAddress, new BigNumber('0x8080808080808080808080808080808080808080808080808080808080808080'), { from: tokenOwner }),
+            et.mint.sendTransactionAsync(takerAddress, new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'), { from: tokenOwner }),
         ]);
     });
     beforeEach(async () => {
@@ -215,8 +237,35 @@ describe('Exchange', () => {
     });
 
     describe.only('Testing NFTs', () => {
-        it('should successfully exchange two NFTs', () => {
-            
+        it('should successfully exchange two NFTs', async () => {
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+                takerTokenAmount: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+                makerAssetProxyId: AssetProxyId.ERC721,
+                takerAssetProxyId: AssetProxyId.ERC721,
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            for(var i = 0; i < res.logs.length; ++i) {
+                    const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
+                    console.log(log);
+                    console.log();
+                    console.log();
+            }
+
+
+            const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
+            const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
         });
     })
 
