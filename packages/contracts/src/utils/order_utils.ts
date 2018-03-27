@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 
 import { crypto } from './crypto';
 import { OrderStruct, SignatureType, SignedOrder, UnsignedOrder } from './types';
+var ethersUtils = require('ethers-utils');
 
 export const orderUtils = {
     createFill: (signedOrder: SignedOrder, takerTokenFillAmount?: BigNumber) => {
@@ -70,10 +71,8 @@ export const orderUtils = {
             order.takerFeeAmount,
             order.expirationTimeSeconds,
             order.salt,
-            new BigNumber(order.makerAssetProxyData.length),
-            order.makerAssetProxyData,
-            new BigNumber(order.takerAssetProxyData.length),
-            order.takerAssetProxyData,
+            ethersUtils.arrayify(order.makerAssetProxyData),
+            ethersUtils.arrayify(order.takerAssetProxyData),
         ]);
         const orderSchemaHashHex = `0x${orderSchemaHashBuff.toString('hex')}`;
         const orderParamsHashHex = `0x${orderParamsHashBuff.toString('hex')}`;

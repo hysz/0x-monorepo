@@ -33,8 +33,9 @@ import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
 import {AssetTransferMetadataStruct, encodeAssetTransferMetadata} from '../../src/utils/asset_transfer_proxy';
 
-//import * as ethersContracts from '@0xproject/ethers-utils';
 
+
+//import * as ethersUtils from 'ethers-utils/convert';
 
 import * as _ from 'lodash';
 

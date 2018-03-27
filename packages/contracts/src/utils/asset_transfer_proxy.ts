@@ -1,6 +1,7 @@
 import { BigNumber } from '@0xproject/utils';
 import * as Web3 from 'web3';
 import { AssetProxyId } from './types'
+var ethersUtils = require('ethers-utils');
 
 export interface AssetTransferMetadataStruct {
     assetProxyId: AssetProxyId;
@@ -78,6 +79,38 @@ export function encodeAssetTransferMetadata(metadata: AssetTransferMetadataStruc
     }
 
     return encoded_metadata.value;
+
+    /**** We should never reach this point ****/
+}
+
+export function encodeAssetTransferMetadataAsArray(metadata: AssetTransferMetadataStruct): Uint8Array
+{
+    var encoded_metadata = { value: "0x" };
+
+    switch(metadata.assetProxyId) {
+        case AssetProxyId.ERC20_V1:
+        case AssetProxyId.ERC20:
+            //var encoded_metadata = new Uint8Array(21);
+            var offset = 0;
+            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
+            encodeAddress(metadata.tokenAddress, encoded_metadata);
+            //return encoded_metadata;
+            break;
+
+        case AssetProxyId.ERC721:
+            //var encoded_metadata = new Uint8Array(53);
+            var offset = 0;
+            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
+            encodeAddress(metadata.tokenAddress, encoded_metadata);
+            encodeUint256(metadata.tokenId, encoded_metadata);
+            //return encoded_metadata;
+            break;
+
+        default:
+            throw new Error("Unrecognized AssetProxyId: " + metadata.assetProxyId);
+    }
+
+    return ethersUtils.arrayify(encoded_metadata.value);
 
     /**** We should never reach this point ****/
 }
