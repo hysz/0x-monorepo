@@ -35,8 +35,8 @@ export const orderUtils = {
             takerFeeAmount: signedOrder.takerFeeAmount,
             expirationTimeSeconds: signedOrder.expirationTimeSeconds,
             salt: signedOrder.salt,
-            makerAssetProxyId: signedOrder.makerAssetProxyId,
-            takerAssetProxyId: signedOrder.takerAssetProxyId,
+            makerAssetProxyData: signedOrder.makerAssetProxyData,
+            takerAssetProxyData: signedOrder.takerAssetProxyData,
         };
         return orderStruct;
     },
@@ -54,8 +54,8 @@ export const orderUtils = {
             'uint256 takerFeeAmount',
             'uint256 expirationTimeSeconds',
             'uint256 salt',
-            'uint8 makerAssetProxyId',
-            'uint8 takerAssetProxyId',
+            'bytes makerAssetProxyData',
+            'bytes takerAssetProxyData',
         ]);
         const orderParamsHashBuff = crypto.solSHA3([
             order.exchangeAddress,
@@ -70,8 +70,8 @@ export const orderUtils = {
             order.takerFeeAmount,
             order.expirationTimeSeconds,
             order.salt,
-            order.makerAssetProxyId,
-            order.takerAssetProxyId,
+            order.makerAssetProxyData,
+            order.takerAssetProxyData,
         ]);
         const orderSchemaHashHex = `0x${orderSchemaHashBuff.toString('hex')}`;
         const orderParamsHashHex = `0x${orderParamsHashBuff.toString('hex')}`;

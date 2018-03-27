@@ -149,6 +149,8 @@ describe('Exchange', () => {
         });
         exWrapper = new ExchangeWrapper(exchange, zeroEx);
 
+
+
         const defaultOrderParams = {
             exchangeAddress: exchange.address,
             makerAddress,
@@ -159,8 +161,8 @@ describe('Exchange', () => {
             takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
             makerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
             takerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
-            makerAssetProxyId: AssetProxyId.ERC20,
-            takerAssetProxyId: AssetProxyId.ERC20,
+            makerAssetProxyData: encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: rep.address, tokenId: new BigNumber(0)}),
+            takerAssetProxyData: encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: dgd.address, tokenId: new BigNumber(0)}),
         };
         const privateKey = constants.TESTRPC_PRIVATE_KEYS[0];
         orderFactory = new OrderFactory(privateKey, defaultOrderParams);
@@ -256,7 +258,15 @@ describe('Exchange', () => {
                 tokenAddress: ck.address,
                 tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
             }) as AssetTransferMetadataStruct;
-            var encodedMakerMetadata = encodeAssetTransferMetadata(makerMetadata);
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+
+            /*var encodedMakerMetadata = encodeAssetTransferMetadata(makerMetadata);
 
             console.log(encodedMakerMetadata);
             const txHash = await erc721TransferProxy.logMetadata.sendTransactionAsync(encodedMakerMetadata, { from: makerAddress });
@@ -265,14 +275,14 @@ describe('Exchange', () => {
             var _logDecoder: LogDecoder = new LogDecoder(constants.TESTRPC_NETWORK_ID);
             tx.logs = _.map(tx.logs, log => _logDecoder.decodeLogOrThrow(log));
 
-/*
+
             for(var i = 0; i < tx.logs.length; ++i) {
                     const log = logDecoder.decodeLogOrThrow(tx.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
                     console.log(log);
                     console.log();
                     console.log();
             }
-
+*/
 
             //console.log(encodedMakerMetadata);
 
@@ -281,8 +291,8 @@ describe('Exchange', () => {
                 takerTokenAddress: ck.address,
                 makerTokenAmount: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
                 takerTokenAmount: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
-                makerAssetProxyId: AssetProxyId.ERC721,
-                takerAssetProxyId: AssetProxyId.ERC721,
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
             });
 
             const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
@@ -303,7 +313,7 @@ describe('Exchange', () => {
             const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
             expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
             const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
-            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);*/
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
         });
     })
 

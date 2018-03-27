@@ -48,6 +48,8 @@ contract ERC721TransferProxy is
         uint256 tokenId;
         (token, tokenId) = decodeERC721Metadata(assetMetadata);
 
+        require(amount == 1);
+
         // Todo: NoThrow
         ERC721Token(token).transferFrom(from, to, amount);
         return true;
@@ -59,7 +61,7 @@ contract ERC721TransferProxy is
             address token,
             bytes32 tokenId
     );
-    
+
     function logMetadata(bytes assetMetadata)
         public
     {

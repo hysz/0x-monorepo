@@ -14,6 +14,7 @@ import { ContractName, SignedOrder, AssetProxyId } from '../../src/utils/types';
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
+import {AssetTransferMetadataStruct, encodeAssetTransferMetadata} from '../../src/utils/asset_transfer_proxy';
 
 chaiSetup.configure();
 const expect = chai.expect;
@@ -70,8 +71,8 @@ describe('Exchange', () => {
             takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
             makerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
             takerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
-            makerAssetProxyId: AssetProxyId.ERC20,
-            takerAssetProxyId: AssetProxyId.ERC20,
+            makerAssetProxyData: encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: rep.address, tokenId: new BigNumber(0)}),
+            takerAssetProxyData: encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: dgd.address, tokenId: new BigNumber(0)}),
         };
         const privateKey = constants.TESTRPC_PRIVATE_KEYS[0];
         orderFactory = new OrderFactory(privateKey, defaultOrderParams);

@@ -83,29 +83,29 @@ contract MixinSettlementProxy is
             uint256 takerFeeAmountPaid
         )
     {
-        makerTokenFilledAmount = order.makerTokenAmount;//getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
-        bytes32 orderHash = getOrderHash(order);
+        //makerTokenFilledAmount = order.makerTokenAmount;//getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
+        //bytes32 orderHash = getOrderHash(order);
 
 
         emit LogGreg(order.makerTokenAmount, order.takerTokenAmount);
 
-        require(
+        /*require(
             TRANSFER_PROXY.transferFrom(
-                encodeMetadata(order.makerAssetProxyId, order.makerTokenAddress),
+                order.makerAssetProxyData,
                 order.makerAddress,
                 takerAddress,
                 makerTokenFilledAmount
             )
         );
-
+/*
         require(
             TRANSFER_PROXY.transferFrom(
-                encodeMetadata(order.takerAssetProxyId, order.takerTokenAddress),
+                order.takerAssetProxyData,
                 takerAddress,
                 order.makerAddress,
                 takerTokenFilledAmount
             )
-        );
+        );*/
         /*if (order.feeRecipientAddress != address(0)) {
             if (order.makerFeeAmount > 0) {
                 makerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerFeeAmount);
