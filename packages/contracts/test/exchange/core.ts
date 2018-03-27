@@ -311,7 +311,7 @@ describe('Exchange', () => {
             const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
             expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
 
-            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const takerTokenFillAmount = new BigNumber(105);//signedOrder.takerTokenAmount;
             const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
             for(var i = 0; i < res.logs.length; ++i) {
                     const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;

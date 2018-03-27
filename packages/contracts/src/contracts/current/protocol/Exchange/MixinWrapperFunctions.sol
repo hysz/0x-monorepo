@@ -78,14 +78,19 @@ contract MixinWrapperFunctions is
        bytes32 len2
     );
 
+    event GLog3(
+        bytes32 fill
+    );
 
-    function gregOrder(GOrder order)//, uint256 takerTokenFillAmount, bytes signature)
+
+    function gregOrder(GOrder order, uint256 takerTokenFillAmount) //, bytes signature)
         public view
         returns (bytes32)
     {
         //emit LogGregsss( bytes32(14) );
         //emit GLog(bytes32(order.makerAssetProxyMetadata.length), uint8(order.makerAssetProxyMetadata[0]), bytes32(order.takerAssetProxyMetadata.length), uint8(order.takerAssetProxyMetadata[1]));
-        emit GLog2(bytes32(order.makerAssetProxyMetadata.length), bytes32(order.takerAssetProxyMetadata.length));
+        //emit GLog2(bytes32(order.makerAssetProxyMetadata.length), bytes32(order.takerAssetProxyMetadata.length));
+        emit GLog3(bytes32(takerTokenFillAmount));
         return bytes32(14);
     }
 
@@ -134,7 +139,7 @@ contract MixinWrapperFunctions is
             mstore(start, fillOrderSelector)
             let parameters := add(start, 0x4)
             let parametersOffset := parameters
-            let data := add(parameters, mul(1, 0x20)) // 0x20 for each parameter
+            let data := add(parameters, mul(2, 0x20)) // 0x20 for each parameter
             let dataOffset := data
             let orderOffset := order
             let orderLen := mul(13, 0x20) // 0x20 for each of the 13 parameters
@@ -153,7 +158,7 @@ contract MixinWrapperFunctions is
             }
 
             // Write <makerAssetProxyMetadata> to memory
-            mstore(add(data, mul(11, 0x20)), sub(dataOffset, data))
+            mstore(add(data, mul(11, 0x20)), sub(dataOffset, data)) // Offset from the variable's location in memory
             bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
             orderOffset := add(orderOffset, 0x20)
             bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
@@ -167,7 +172,7 @@ contract MixinWrapperFunctions is
 
 
             // Write <takerAssetProxyMetadata> to memory
-            mstore(add(data, mul(12, 0x20)), sub(dataOffset, data))
+            mstore(add(data, mul(12, 0x20)), sub(dataOffset, data)) // Offset from the variable's location in memory
             bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
             orderOffset := add(orderOffset, 0x20)
             bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
@@ -178,6 +183,10 @@ contract MixinWrapperFunctions is
                 dataOffset := add(dataOffset, 0x20)
                 orderOffset := add(orderOffset, 0x20)
             }
+
+            // write takerTokenFillAmount
+            mstore(parametersOffset, takerTokenFillAmount)
+            parametersOffset := add(parametersOffset, 0x20)
 /*
             // Write <takerTokenFillAmount>
             mstore(parameters, takerTokenFillAmount)
