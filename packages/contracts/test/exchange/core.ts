@@ -262,7 +262,7 @@ describe('Exchange', () => {
             const takerMetadata = ({
                 assetProxyId: AssetProxyId.ERC721,
                 tokenAddress: ck.address,
-                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
             }) as AssetTransferMetadataStruct;
 
 
@@ -294,6 +294,15 @@ describe('Exchange', () => {
                 makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
                 takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
             });
+
+            console.log("---------");
+            console.log("--Maker Metadata--");
+            console.log(encodeAssetTransferMetadata(makerMetadata));
+            console.log("--Taker Metadata--");
+            console.log(encodeAssetTransferMetadata(takerMetadata));
+            console.log("--Order Hash--");
+            //console.log(signedOrder);
+            console.log("---------");
 
             const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
             expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);

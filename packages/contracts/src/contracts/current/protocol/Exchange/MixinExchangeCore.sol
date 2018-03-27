@@ -79,6 +79,12 @@ contract MixinExchangeCore is
     * Core exchange functions
     */
 
+    event LogGregs(
+        bytes makerData,
+        bytes takerData,
+        bytes32 orderHash
+        );
+
     /// @dev Fills the input order.
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
@@ -94,13 +100,19 @@ contract MixinExchangeCore is
         // Compute the order hash
         bytes32 orderHash = getOrderHash(order);
 
+        emit LogGregs(order.makerAssetProxyData, order.takerAssetProxyData, orderHash);
+        return 0;
+
         // Validate order and maker only if first time seen
         // TODO: Read filled and cancelled only once
         if (filled[orderHash] == 0 && cancelled[orderHash] == 0) {
             require(order.makerTokenAmount > 0);
             require(order.takerTokenAmount > 0);
             require(isValidSignature(orderHash, order.makerAddress, signature));
+                        return 0;
         }
+
+
 
         // Validate taker
         if (order.takerAddress != address(0)) {

@@ -70,7 +70,9 @@ export const orderUtils = {
             order.takerFeeAmount,
             order.expirationTimeSeconds,
             order.salt,
+            new BigNumber(order.makerAssetProxyData.length),
             order.makerAssetProxyData,
+            new BigNumber(order.takerAssetProxyData.length),
             order.takerAssetProxyData,
         ]);
         const orderSchemaHashHex = `0x${orderSchemaHashBuff.toString('hex')}`;
