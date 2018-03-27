@@ -51,7 +51,7 @@ contract ERC721TransferProxy is
         require(amount == 1);
 
         // Todo: NoThrow
-        ERC721Token(token).transferFrom(from, to, amount);
+        ERC721Token(token).transferFrom(from, to, tokenId);
         return true;
     }
 

@@ -290,8 +290,8 @@ describe('Exchange', () => {
             signedOrder = orderFactory.newSignedOrder({
                 makerTokenAddress: ck.address,
                 takerTokenAddress: ck.address,
-                makerTokenAmount: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
-                takerTokenAmount: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
                 makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
                 takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
             });

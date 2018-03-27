@@ -101,7 +101,7 @@ contract MixinExchangeCore is
         bytes32 orderHash = getOrderHash(order);
 
         emit LogGregs(order.makerAssetProxyData, order.takerAssetProxyData, orderHash);
-        return 0;
+        //return 0;
 
         // Validate order and maker only if first time seen
         // TODO: Read filled and cancelled only once
@@ -109,10 +109,7 @@ contract MixinExchangeCore is
             require(order.makerTokenAmount > 0);
             require(order.takerTokenAmount > 0);
             require(isValidSignature(orderHash, order.makerAddress, signature));
-                        return 0;
         }
-
-
 
         // Validate taker
         if (order.takerAddress != address(0)) {
