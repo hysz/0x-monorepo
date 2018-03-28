@@ -146,7 +146,7 @@ contract MixinWrapperFunctions is
             mstore(start, fillOrderSelector)
             let parameters := add(start, 0x4)
             let parametersOffset := parameters
-            let data := add(parameters, mul(2, 0x20)) // 0x20 for each parameter
+            let data := add(parameters, mul(3, 0x20)) // 0x20 for each parameter
             let dataOffset := data
             let orderOffset := order
             let orderLen := mul(13, 0x20) // 0x20 for each of the 13 parameters
@@ -209,115 +209,6 @@ contract MixinWrapperFunctions is
                 orderOffset := add(orderOffset, 0x20)
             }
 
-
-/*
-            // Write <takerTokenFillAmount>
-            mstore(parameters, takerTokenFillAmount)
-            parameters := add(parameters, 0x20)
-
-            // Write <signature> location to parameter list
-            mstore(parameters, dataOffset)
-            parameters := add(parameters, 0x20)
-
-            // Write signature
-            bytesLen := mload(signature)  // Read makerAssetProxyData length
-            let sigOffset := add(signature, 32)
-            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
-            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
-            dataOffset := add(dataOffset, 0x20)
-            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
-                mstore(dataOffset, mload(sigOffset))
-                dataOffset := add(dataOffset, 0x20)
-                sigOffset := add(sigOffset, 0x20)
-            }
-*/
-/*
-            // Copy 2 dynamic parameters from Order
-            for{let i := 0} lt(i, 2) {i := add(i, 1)} {
-                mstore(dataOffset, add(data, mul(0x2, i)))
-            }
-
-            startOffset := add(startOffset, 0x20)
-
-
-            // Write order struct
-            mstore(add(start, 4), mload(order))             // makerAddress
-            /*mstore(add(start, 36), mload(add(order, 32)))   // takerAddress
-            mstore(add(start, 68), mload(add(order, 64)))   // makerTokenAddress
-            mstore(add(start, 100), mload(add(order, 96)))  // takerTokenAddress
-            mstore(add(start, 132), mload(add(order, 128))) // feeRecipientAddress
-            mstore(add(start, 164), mload(add(order, 160))) // makerTokenAmount
-            mstore(add(start, 196), mload(add(order, 192))) // takerTokenAmount
-            mstore(add(start, 228), mload(add(order, 224))) // makerFeeAmount
-            mstore(add(start, 260), mload(add(order, 256))) // takerFeeAmount
-            mstore(add(start, 292), mload(add(order, 288))) // expirationTimeSeconds
-            mstore(add(start, 324), mload(add(order, 320))) // salt
-
-            let sOffset := add(4, 32)
-            let oOffset := add(320, 32) // I am a dummy location @+352
-
-            //mstore(add(start, sOffset), mload(add(order, oOffset))) // some dummy value
-            //sOffset := add(sOffset, 32)
-            oOffset := add(oOffset, 32) // I am a dummy location @+384
-
-            //mstore(add(start, sOffset), mload(add(order, oOffset)))
-            //sOffset := add(sOffset, 32)
-            oOffset := add(oOffset, 32) // I hold makerAssetProxyData length
-
-            // makerAsssetProxyData
-            let makerAPDLen := mload(add(order, oOffset))  // Read makerAssetProxyData length
-            oOffset := add(oOffset, 32)
-            let makerADPLenWords := add(div(makerAPDLen, 32), gt(mod(makerAPDLen, 32), 0))
-            mstore(add(start, sOffset), add(sOffset, 28)) // Write makerAssetProxyData offset
-            sOffset := add(sOffset, 32)
-            mstore(add(start, sOffset), makerAPDLen)     // Write makerAssetProxyData length
-            sOffset := add(sOffset, 32)
-            for {let i := 0} lt(i, makerADPLenWords) {i := add(i, 1)} { // write makerAssetProxyData contents
-                mstore(add(start, sOffset), mload(add(order, oOffset)))
-                sOffset := add(sOffset, 32)
-                oOffset := add(oOffset, 32)
-            }
-/*
-            // takerAsssetProxyData
-            let takerAPDLen := mload(add(order, oOffset))   // Read takerAssetProxyData length
-            oOffset := add(oOffset, 32)
-            let takerADPLenWords := add(div(takerAPDLen, 32), gt(mod(takerAPDLen, 32), 0))
-            mstore(add(start, sOffset), add(sOffset, 28)) // Write takerAssetProxyData offset
-            sOffset := add(sOffset, 32)
-            mstore(add(start, sOffset), takerAPDLen)     // Write takerAssetProxyData length
-            sOffset := add(sOffset, 32)
-            for {let j := 0} lt(j, takerADPLenWords) {j := add(j, 1)} { // write takerAssetProxyData contents
-                mstore(add(start, sOffset), mload(add(order, oOffset)))
-                sOffset := add(sOffset, 32)
-                oOffset := add(oOffset, 32)
-            }
-/*
-            // Write takerTokenFillAmount
-            mstore(add(start, sOffset), takerTokenFillAmount)
-            sOffset := add(sOffset, 32)
-
-            // Write signature offset
-            mstore(add(start, sOffset), add(sOffset, 28))
-            sOffset := add(sOffset, 32)
-
-            // Write signature length
-            let sigLen := mload(signature)
-            mstore(add(start, sOffset), sigLen)
-            sOffset := add(sOffset, 32)
-
-            // Calculate signature length with padding
-            let paddingLen := mod(sub(0, sigLen), 32)
-            let sigLenWithPadding := add(sigLen, paddingLen)
-
-            takerTokenFilledAmount := takerAPDLen
-
-            // Write signature
-            let sigStart := add(signature, 32)
-            for { let curr := 0 }
-            lt(curr, sigLenWithPadding)
-            { curr := add(curr, 32) }
-            { mstore(add(start, add(sOffset, curr)), mload(add(sigStart, curr))) } // Note: we assume that padding consists of only 0's
-*/
             // Execute delegatecall
             let success := delegatecall(
                 gas,                         // forward all gas, TODO: look into gas consumption of assert/throw
