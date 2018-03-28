@@ -50,58 +50,6 @@ contract MixinWrapperFunctions is
         );
     }
 
-    struct GOrder {
-        address makerAddress;
-        address takerAddress;
-        address makerTokenAddress;
-        address takerTokenAddress;
-        address feeRecipientAddress;
-        uint256 makerTokenAmount;
-        uint256 takerTokenAmount;
-        uint256 makerFeeAmount;
-        uint256 takerFeeAmount;
-        uint256 expirationTimeSeconds;
-        uint256 salt;
-        bytes makerAssetProxyMetadata;
-        bytes takerAssetProxyMetadata;
-    }
-
-    event GLog(
-        bytes32 len,
-        uint8 first,
-        bytes32 len2,
-        uint8 first2
-    );
-
-    event GLog2(
-        bytes32 len,
-       bytes32 len2
-    );
-
-    event GLog3(
-        bytes32 fill
-    );
-
-    event GLog4(
-        bytes32 len,
-        uint8 first
-    );
-
-
-
-    function gregOrder(GOrder order, uint256 takerTokenFillAmount, bytes signature)
-        public view
-        returns (bytes32)
-    {
-        //emit LogGregsss( bytes32(14) );
-        //emit GLog(bytes32(order.makerAssetProxyMetadata.length), uint8(order.makerAssetProxyMetadata[0]), bytes32(order.takerAssetProxyMetadata.length), uint8(order.takerAssetProxyMetadata[1]));
-        //emit GLog2(bytes32(order.makerAssetProxyMetadata.length), bytes32(order.takerAssetProxyMetadata.length));
-        //emit GLog3(bytes32(takerTokenFillAmount));
-        emit GLog4(bytes32(signature.length), uint8(signature[0]));
-        return bytes32(14);
-    }
-
-
     /// @dev Fills an order with specified parameters and ECDSA signature. Returns false if the transaction would otherwise revert.
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
@@ -283,7 +231,6 @@ contract MixinWrapperFunctions is
                 takerTokenFilledAmount := mload(headerAreaStart)
             }
         }
-        emit LogGregsss(bytes32(takerTokenFilledAmount));
         return takerTokenFilledAmount;
     }
 

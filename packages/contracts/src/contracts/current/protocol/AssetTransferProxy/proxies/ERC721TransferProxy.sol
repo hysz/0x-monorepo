@@ -54,20 +54,4 @@ contract ERC721TransferProxy is
         ERC721Token(token).transferFrom(from, to, tokenId);
         return true;
     }
-
-    event LogGreg (
-            uint256 metadataLength,
-            uint8 proxyId,
-            address token,
-            bytes32 tokenId
-    );
-
-    function logMetadata(bytes assetMetadata)
-        public
-    {
-        address token;
-        uint256 tokenId;
-        (token, tokenId) = decodeERC721Metadata(assetMetadata);
-        emit LogGreg(assetMetadata.length, uint8(assetMetadata[0]), token, bytes32(tokenId));
-    }
 }

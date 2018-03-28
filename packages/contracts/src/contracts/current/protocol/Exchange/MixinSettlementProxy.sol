@@ -67,11 +67,6 @@ contract MixinSettlementProxy is
         ZRX_TOKEN_PROXY_ID = zrxTokenProxyId;
     }
 
-    event LogGreg(
-            bytes32 makerTokenAmount,
-            bytes32 takerTokenAmount
-    );
-
     function settleOrder(
         Order order,
         address takerAddress,
@@ -85,9 +80,6 @@ contract MixinSettlementProxy is
     {
         makerTokenFilledAmount = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
         bytes32 orderHash = getOrderHash(order);
-
-
-        emit LogGreg(bytes32(takerTokenFilledAmount), bytes32(order.takerAssetProxyData.length));
 
         require(
             TRANSFER_PROXY.transferFrom(
