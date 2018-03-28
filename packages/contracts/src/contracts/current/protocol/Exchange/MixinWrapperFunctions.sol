@@ -158,91 +158,129 @@ contract MixinWrapperFunctions is
 
         assembly {
             // Load free memory pointer
-            let start := mload(0x40)
+            let freeMemoryStart := mload(0x40)
 
-            // Write function signature
-            mstore(start, fillOrderSelector)
-            let parameters := add(start, 0x4)
-            let parametersOffset := parameters
-            let data := add(parameters, mul(3, 0x20)) // 0x20 for each parameter
-            let dataOffset := data
-            let orderOffset := order
-            let orderLen := mul(13, 0x20) // 0x20 for each of the 13 parameters
+            // Areas below may use the following variables:
+            //   1. <area>Start   -- Start of this area in memory
+            //   2. <area>End     -- End of this area in memory. This value may
+            //                       be precomputed (before writing contents),
+            //                       or it may be computed as contents are written.
+            //   3. <area>Offset  -- Current offset into area. If an area's End
+            //                       is precomputed, this variable tracks the
+            //                       offsets of contents as they are written.
+
+            /////// Setup Header Area ///////
+            let headerAreaStart := freeMemoryStart
+            mstore(headerAreaStart, fillOrderSelector)
+            let headerAreaEnd := add(headerAreaStart, 0x4)
+
+            /////// Setup Params Area ///////
+            // This area is preallocated and written to later.
+            // This is because we need to fill in offsets that have not yet been calculated.
+            let paramsAreaStart := headerAreaEnd
+            let paramsAreaEnd := add(paramsAreaStart, 0x60)
+            let paramsAreaOffset := paramsAreaStart
+
+            /////// Setup Data Area ///////
+            let dataAreaStart := paramsAreaEnd
+            let dataAreaEnd := dataAreaStart
+
+            // Offset from the source data we're reading from
+            let sourceOffset := order
+            // bytesLen and bytesLenPadded track the length of a dynamically-allocated bytes array.
             let bytesLen := 0
             let bytesLenPadded := 0
 
-            // Write memory location of Order, relative to the start of the parameter list
-            mstore(parametersOffset, sub(dataOffset, parameters))
-            parametersOffset := add(parametersOffset, 0x20)
+            /////// Write order Struct ///////
+            // Write memory location of Order, relative to the start of the
+            // parameter list, then increment the paramsAreaOffset respectively.
+            mstore(paramsAreaOffset, sub(dataAreaEnd, paramsAreaStart))
+            paramsAreaOffset := add(paramsAreaOffset, 0x20)
 
-            // Copy parameters from Order
+            // Write values for each field in the order
             for{let i := 0} lt(i, 13) {i := add(i, 1)} {
-                mstore(dataOffset, mload(orderOffset))
-                dataOffset := add(dataOffset, 0x20)
-                orderOffset := add(orderOffset, 0x20)
+                mstore(dataAreaEnd, mload(sourceOffset))
+                dataAreaEnd := add(dataAreaEnd, 0x20)
+                sourceOffset := add(sourceOffset, 0x20)
             }
 
-            // Write <makerAssetProxyMetadata> to memory
-            mstore(add(data, mul(11, 0x20)), sub(dataOffset, data)) // Offset from the variable's location in memory
-            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
-            orderOffset := add(orderOffset, 0x20)
-            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
-            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
-            dataOffset := add(dataOffset, 0x20)
-            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
-                mstore(dataOffset, mload(orderOffset))
-                dataOffset := add(dataOffset, 0x20)
-                orderOffset := add(orderOffset, 0x20)
+            // Write offset to <order.makerAssetProxyMetadata>
+            mstore(add(dataAreaStart, mul(11, 0x20)), sub(dataAreaEnd, dataAreaStart))
+
+            // Calculate length of <order.makerAssetProxyMetadata>
+            bytesLen := mload(sourceOffset)
+            sourceOffset := add(sourceOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 0x20), gt(mod(bytesLen, 0x20), 0))
+
+            // Write length of <order.makerAssetProxyMetadata>
+            mstore(dataAreaEnd, bytesLen)
+            dataAreaEnd := add(dataAreaEnd, 0x20)
+
+            // Write contents of  <order.makerAssetProxyMetadata>
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} {
+                mstore(dataAreaEnd, mload(sourceOffset))
+                dataAreaEnd := add(dataAreaEnd, 0x20)
+                sourceOffset := add(sourceOffset, 0x20)
             }
 
+            // Write offset to <order.takerAssetProxyMetadata>
+            mstore(add(dataAreaStart, mul(12, 0x20)), sub(dataAreaEnd, dataAreaStart))
 
-            // Write <takerAssetProxyMetadata> to memory
-            mstore(add(data, mul(12, 0x20)), sub(dataOffset, data)) // Offset from the variable's location in memory
-            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
-            orderOffset := add(orderOffset, 0x20)
-            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
-            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
-            dataOffset := add(dataOffset, 0x20)
-            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
-                mstore(dataOffset, mload(orderOffset))
-                dataOffset := add(dataOffset, 0x20)
-                orderOffset := add(orderOffset, 0x20)
+            // Calculate length of <order.takerAssetProxyMetadata>
+            bytesLen := mload(sourceOffset)
+            sourceOffset := add(sourceOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 0x20), gt(mod(bytesLen, 0x20), 0))
+
+            // Write length of <order.takerAssetProxyMetadata>
+            mstore(dataAreaEnd, bytesLen)
+            dataAreaEnd := add(dataAreaEnd, 0x20)
+
+            // Write contents of  <order.takerAssetProxyMetadata>
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} {
+                mstore(dataAreaEnd, mload(sourceOffset))
+                dataAreaEnd := add(dataAreaEnd, 0x20)
+                sourceOffset := add(sourceOffset, 0x20)
             }
 
-            // write takerTokenFillAmount
-            mstore(parametersOffset, takerTokenFillAmount)
-            parametersOffset := add(parametersOffset, 0x20)
+            /////// Write takerTokenFillAmount ///////
+            mstore(paramsAreaOffset, takerTokenFillAmount)
+            paramsAreaOffset := add(paramsAreaOffset, 0x20)
 
-            // Write <signature> to memory
-            mstore(parametersOffset, sub(dataOffset, parameters)) // Offset from the variable's location in memory
-            parametersOffset := add(parametersOffset, 0x20)
-            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
-            orderOffset := add(orderOffset, 0x20)
-            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
-            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
-            dataOffset := add(dataOffset, 0x20)
-            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
-                mstore(dataOffset, mload(orderOffset))
-                dataOffset := add(dataOffset, 0x20)
-                orderOffset := add(orderOffset, 0x20)
+            /////// Write signature ///////
+            // Write offset to paramsArea
+            mstore(paramsAreaOffset, sub(dataAreaEnd, paramsAreaStart))
+
+            // Calculate length of signature
+            bytesLen := mload(sourceOffset)
+            sourceOffset := add(sourceOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 0x20), gt(mod(bytesLen, 0x20), 0))
+
+            // Write length of signature
+            mstore(dataAreaEnd, bytesLen)
+            dataAreaEnd := add(dataAreaEnd, 0x20)
+
+            // Write contents of signature
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} {
+                mstore(dataAreaEnd, mload(sourceOffset))
+                dataAreaEnd := add(dataAreaEnd, 0x20)
+                sourceOffset := add(sourceOffset, 0x20)
             }
 
             // Execute delegatecall
             let success := delegatecall(
-                gas,                         // forward all gas, TODO: look into gas consumption of assert/throw
-                address,                     // call address of this contract
-                start,                       // pointer to start of input
-                //add(sOffset, sigLenWithPadding), // input length is  484 + signature length + padding length
-                sub(dataOffset, start),
-                start,                       // write output over input
-                32                           // output size is 32 bytes
+                gas,                                // forward all gas, TODO: look into gas consumption of assert/throw
+                address,                            // call address of this contract
+                headerAreaStart,                    // pointer to start of input
+                sub(dataAreaEnd, headerAreaStart),  // length of input
+                headerAreaStart,                    // write output over input
+                32                                  // output size is 32 bytes
             )
             switch success
             case 0 {
                 takerTokenFilledAmount := 0
             }
             case 1 {
-                takerTokenFilledAmount := mload(start)
+                takerTokenFilledAmount := mload(headerAreaStart)
             }
         }
         emit LogGregsss(bytes32(takerTokenFilledAmount));
