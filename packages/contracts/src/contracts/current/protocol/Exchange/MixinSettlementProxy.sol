@@ -83,7 +83,7 @@ contract MixinSettlementProxy is
             uint256 takerFeeAmountPaid
         )
     {
-        makerTokenFilledAmount = order.makerTokenAmount;//getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
+        makerTokenFilledAmount = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
         bytes32 orderHash = getOrderHash(order);
 
 
@@ -106,7 +106,7 @@ contract MixinSettlementProxy is
                 takerTokenFilledAmount
             )
         );
-        /*if (order.feeRecipientAddress != address(0)) {
+        if (order.feeRecipientAddress != address(0)) {
             if (order.makerFeeAmount > 0) {
                 makerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerFeeAmount);
                 require(
@@ -129,7 +129,7 @@ contract MixinSettlementProxy is
                     )
                 );
             }
-        }*/
+        }
         return (makerTokenFilledAmount, makerFeeAmountPaid, takerFeeAmountPaid);
     }
 }
