@@ -118,21 +118,39 @@ contract MixinWrapperFunctions is
         // assembly so that we can intercept a call that throws. For this, we
         // need the input encoded in memory in the Ethereum ABIv2 format [1].
 
-        // | Offset | Length  | Contents                     |
-        // |--------|---------|------------------------------|
-        // | 0      | 4       | function selector            |
-        // | 4      | 13 * 32 | Order order                  |
-        // | 420    | 32      | uint256 takerTokenFillAmount |
-        // | 452    | 32      | offset to signature (416)    |
-        // | 484    | 32      | len(signature)               |
-        // | 516    | (1)     | signature                    |
-        // | (2)    | (3)     | padding (zero)               |
-        // | (4)    |         | end of input                 |
+        // | Area     | Offset | Length  | Contents                                    |
+        // | -------- |--------|---------|-------------------------------------------- |
+        // | Header   | 0x00   | 4       | function selector                           |
+        // | Params   |        | 3 * 32  | function parameters:                        |
+        // |          | 0x00   |         |   1. offset to order (*)                    |
+        // |          | 0x20   |         |   2. takerTokenFillAmount                   |
+        // |          | 0x40   |         |   3. offset to signature (*)                |
+        // | Data     |        | 13 * 32 | order:                                      |
+        // |          | 0x000  |         |   1.  makerAddress                          |
+        // |          | 0x020  |         |   2.  takerAddress                          |
+        // |          | 0x040  |         |   3.  makerTokenAddress                     |
+        // |          | 0x060  |         |   4.  takerTokenAddress                     |
+        // |          | 0x080  |         |   5.  feeRecipientAddress                   |
+        // |          | 0x0A0  |         |   6.  makerTokenAmount                      |
+        // |          | 0x0C0  |         |   7.  takerTokenAmount                      |
+        // |          | 0x0E0  |         |   8.  makerFeeAmount                        |
+        // |          | 0x100  |         |   9.  takerFeeAmount                        |
+        // |          | 0x120  |         |   10. expirationTimeSeconds                 |
+        // |          | 0x140  |         |   11. salt                                  |
+        // |          | 0x160  |         |   12. Offset to makerAssetProxyMetadata (*) |
+        // |          | 0x180  |         |   13. Offset to takerAssetProxyMetadata (*  |
+        // |          | 0x1A0  | 32      | makerAssetProxyMetadata Length              |
+        // |          | 0x1C0  | **      | makerAssetProxyMetadata Contents            |
+        // |          | 0x1E0  | 32      | takerAssetProxyMetadata Length              |
+        // |          | 0x200  | **      | takerAssetProxyMetadata Contents            |
+        // |          | 0x220  | 32      | signature Length                            |
+        // |          | 0x240  | **      | signature Contents                          |
 
-        // (1): len(signature)
-        // (2): 452 + len(signature)
-        // (3): (32 - len(signature)) mod 32
-        // (4): 452 + len(signature) + (32 - len(signature)) mod 32
+        // * Offsets are calculated from the beginning of the current area: Header, Params, Data:
+        //     An offset stored in the Params area is calculated from the beginning of the Params section.
+        //     An offset stored in the Data area is calculated from the beginning of the Data section.
+
+        // ** The length of dynamic array contents are stored in the field immediately preceeding the contents.
 
         // [1]: https://solidity.readthedocs.io/en/develop/abi-spec.html
 
