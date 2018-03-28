@@ -97,14 +97,8 @@ contract MixinExchangeCore is
         public
         returns (uint256 takerTokenFilledAmount)
     {
-
-        return 105;
-
         // Compute the order hash
         bytes32 orderHash = getOrderHash(order);
-
-        emit LogGregs(order.makerAssetProxyData, order.takerAssetProxyData, orderHash);
-        //return 0;
 
         // Validate order and maker only if first time seen
         // TODO: Read filled and cancelled only once
@@ -152,8 +146,6 @@ contract MixinExchangeCore is
         // Settle order
         var (makerTokenFilledAmount, makerFeeAmountPaid, takerFeeAmountPaid) =
             settleOrder(order, msg.sender, takerTokenFilledAmount);
-
-                            return 0;
 
         // Log order
         LogFill(

@@ -136,7 +136,7 @@ contract MixinWrapperFunctions is
 
         // [1]: https://solidity.readthedocs.io/en/develop/abi-spec.html
 
-        bytes4 fillOrderSelector = this.gregOrder.selector;
+        bytes4 fillOrderSelector = this.fillOrder.selector;
 
         assembly {
             // Load free memory pointer
@@ -330,10 +330,10 @@ contract MixinWrapperFunctions is
             )
             switch success
             case 0 {
-                takerTokenFilledAmount := bytesLen
+                takerTokenFilledAmount := 0
             }
             case 1 {
-                takerTokenFilledAmount := 0x69 //mload(start)
+                takerTokenFilledAmount := mload(start)
             }
         }
         emit LogGregsss(bytes32(takerTokenFilledAmount));

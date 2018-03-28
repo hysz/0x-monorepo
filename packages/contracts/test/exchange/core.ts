@@ -294,7 +294,6 @@ describe('Exchange', () => {
                 takerTokenAmount: new BigNumber(1),
                 makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
                 takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
-                salt: new BigNumber(105)
             });
 
             console.log("---------");
@@ -311,7 +310,7 @@ describe('Exchange', () => {
             const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
             expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
 
-            const takerTokenFillAmount = new BigNumber(105);//signedOrder.takerTokenAmount;
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
             const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
             for(var i = 0; i < res.logs.length; ++i) {
                     const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
@@ -320,11 +319,10 @@ describe('Exchange', () => {
                     console.log();
             }
 
-/*
             const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
             expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
             const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
-            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);*/
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
         });
     })
 
