@@ -82,15 +82,22 @@ contract MixinWrapperFunctions is
         bytes32 fill
     );
 
+    event GLog4(
+        bytes32 len,
+        uint8 first
+    );
 
-    function gregOrder(GOrder order, uint256 takerTokenFillAmount) //, bytes signature)
+
+
+    function gregOrder(GOrder order, uint256 takerTokenFillAmount, bytes signature)
         public view
         returns (bytes32)
     {
         //emit LogGregsss( bytes32(14) );
         //emit GLog(bytes32(order.makerAssetProxyMetadata.length), uint8(order.makerAssetProxyMetadata[0]), bytes32(order.takerAssetProxyMetadata.length), uint8(order.takerAssetProxyMetadata[1]));
         //emit GLog2(bytes32(order.makerAssetProxyMetadata.length), bytes32(order.takerAssetProxyMetadata.length));
-        emit GLog3(bytes32(takerTokenFillAmount));
+        //emit GLog3(bytes32(takerTokenFillAmount));
+        emit GLog4(bytes32(signature.length), uint8(signature[0]));
         return bytes32(14);
     }
 
@@ -187,6 +194,22 @@ contract MixinWrapperFunctions is
             // write takerTokenFillAmount
             mstore(parametersOffset, takerTokenFillAmount)
             parametersOffset := add(parametersOffset, 0x20)
+
+            // Write <signature> to memory
+            mstore(parametersOffset, sub(dataOffset, parameters)) // Offset from the variable's location in memory
+            parametersOffset := add(parametersOffset, 0x20)
+            bytesLen := mload(orderOffset)  // Read makerAssetProxyData length
+            orderOffset := add(orderOffset, 0x20)
+            bytesLenPadded := add(div(bytesLen, 32), gt(mod(bytesLen, 32), 0))
+            mstore(dataOffset, bytesLen)     // Write makerAssetProxyData length
+            dataOffset := add(dataOffset, 0x20)
+            for {let i := 0} lt(i, bytesLenPadded) {i := add(i, 1)} { // write makerAssetProxyData contents
+                mstore(dataOffset, mload(orderOffset))
+                dataOffset := add(dataOffset, 0x20)
+                orderOffset := add(orderOffset, 0x20)
+            }
+
+
 /*
             // Write <takerTokenFillAmount>
             mstore(parameters, takerTokenFillAmount)
