@@ -68,8 +68,8 @@ contract MixinSettlementProxy is
     }
 
     event LogGreg(
-            uint256 makerTokenAmount,
-            uint256 takerTokenAmount
+            bytes32 makerTokenAmount,
+            bytes32 takerTokenAmount
     );
 
     function settleOrder(
@@ -87,7 +87,7 @@ contract MixinSettlementProxy is
         bytes32 orderHash = getOrderHash(order);
 
 
-        emit LogGreg(order.makerTokenAmount, order.takerTokenAmount);
+        emit LogGreg(bytes32(takerTokenFilledAmount), bytes32(order.takerAssetProxyData.length));
 
         require(
             TRANSFER_PROXY.transferFrom(
