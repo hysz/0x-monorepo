@@ -199,6 +199,7 @@ contract MixinWrapperFunctions is
             mstore(paramsAreaOffset, sub(dataAreaEnd, paramsAreaStart))
 
             // Calculate length of signature
+            sourceOffset := signature
             bytesLen := mload(sourceOffset)
             sourceOffset := add(sourceOffset, 0x20)
             bytesLenPadded := add(div(bytesLen, 0x20), gt(mod(bytesLen, 0x20), 0))
