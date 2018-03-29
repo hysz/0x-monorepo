@@ -9,10 +9,14 @@ export interface AssetTransferMetadataStruct {
     tokenId: BigNumber;
 }
 
+export function zeroPad(value: string, width: number): string {
+    return "0".repeat(width - value.length) + value;
+}
+
 // Returns new offset
 export function encodeAssetProxyId(assetProxyId: AssetProxyId, encoded_metadata: {value: string})//: number
 {
-    encoded_metadata.value += new BigNumber(assetProxyId).toString(16);
+    encoded_metadata.value += zeroPad(new BigNumber(assetProxyId).toString(16), 2); // pad to 1 byte (2 hex chars)
     //encoded_metadata[offset++] = assetProxyId;
     //return offset;
 }
@@ -20,7 +24,7 @@ export function encodeAssetProxyId(assetProxyId: AssetProxyId, encoded_metadata:
 // Returns new offset
 export function encodeAddress(address: string, encoded_metadata: {value: string})//: number
 {
-    encoded_metadata.value += address.replace("0x", "");
+    encoded_metadata.value += zeroPad(address.replace("0x", ""), 40); // pad to 20 bytes (40 hex chars)
 
 /*
     for(var i = 0; i < address.length; ++i) {
@@ -32,7 +36,7 @@ export function encodeAddress(address: string, encoded_metadata: {value: string}
 // Returns new offset
 export function encodeUint256(value: BigNumber, encoded_metadata: {value: string})//: number
 {
-    encoded_metadata.value += value.toString(16);
+    encoded_metadata.value += zeroPad(value.toString(16), 64); // pad to 32 bytes (64 hex chars)
     return;
 
 /*
