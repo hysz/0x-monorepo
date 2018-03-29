@@ -1,8 +1,11 @@
 import { BlockchainLifecycle, devConstants, web3Factory } from '@0xproject/dev-utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
+import { BigNumber } from '@0xproject/utils';
 import * as chai from 'chai';
 import * as Web3 from 'web3';
 
+import { DummyTokenContract } from '../../src/contract_wrappers/generated/dummy_token';
+import { Balances } from '../../src/utils/balances';
 import { TokenTransferProxyContract } from '../../src/contract_wrappers/generated/token_transfer_proxy';
 import { AssetTransferProxyContract } from '../../src/contract_wrappers/generated/asset_transfer_proxy';
 import { ERC20TransferProxyContract } from '../../src/contract_wrappers/generated/e_r_c20_transfer_proxy';
@@ -24,18 +27,26 @@ describe.only('AssetTransferProxy', () => {
     let owner: string;
     let notOwner: string;
     let assetProxyManagerAddress: string;
-    let address: string;
+    let tokenOwner: string;
+    let makerAddress: string;
+    let takerAddress: string;
+    let zrx: DummyTokenContract;
+    let dmyBalances: Balances;
     let tokenTransferProxy: TokenTransferProxyContract;
     let assetTransferProxy: AssetTransferProxyContract;
     let erc20TransferProxyV1: ERC20TransferProxy_v1Contract;
     let erc20TransferProxy: ERC20TransferProxyContract;
     let erc721TransferProxy: ERC721TransferProxyContract;
     const nilAddress = "0x0000000000000000000000000000000000000000";
+    const INITIAL_BALANCE = new BigNumber(10000);
+
     before(async () => {
         const accounts = await web3Wrapper.getAvailableAddressesAsync();
-        owner = address = accounts[0];
+        owner = tokenOwner = accounts[0];
         notOwner = accounts[1];
         assetProxyManagerAddress = accounts[2];
+        makerAddress = accounts[3];
+        takerAddress = accounts[4];
         const tokenTransferProxyInstance = await deployer.deployAsync(ContractName.TokenTransferProxy);
         tokenTransferProxy = new TokenTransferProxyContract(
             web3Wrapper,
@@ -72,6 +83,18 @@ describe.only('AssetTransferProxy', () => {
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
         );
+
+        const zrxInstance = await deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS);
+        zrx = new DummyTokenContract(web3Wrapper, zrxInstance.abi, zrxInstance.address);
+        await zrx.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner });
+        await zrx.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner });
+        dmyBalances = new Balances([zrx], [makerAddress, takerAddress]);
+        await zrx.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_BALANCE, {
+            from: takerAddress,
+        });
+        await zrx.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_BALANCE, {
+            from: makerAddress,
+        });
 
         await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, { from: accounts[0] });
         await erc20TransferProxyV1.addAuthorizedAddress.sendTransactionAsync(assetTransferProxy.address, { from: accounts[0] });
@@ -212,16 +235,67 @@ describe.only('AssetTransferProxy', () => {
 
     describe('transferFrom', () => {
         it('should delegate transfer to registered proxy', async () => {
+            // Register ERC20 proxy
+            await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
 
+            // Construct metadata for ERC20 proxy
+            const proxyMetadata = ({
+                assetProxyId: AssetProxyId.ERC20,
+                tokenAddress: zrx.address,
+                tokenId: new BigNumber(0),
+            }) as AssetTransferMetadataStruct;
+            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+
+            // Perform a transfer from makerAddress to takerAddress
+            let balances = await dmyBalances.getAsync();
+            const amount = new BigNumber(10);
+            await assetTransferProxy.transferFrom.sendTransactionAsync(encodedProxyMetadata, makerAddress, takerAddress, amount, { from: assetProxyManagerAddress });
+
+            // Verify transfer was successful
+            let newBalances = await dmyBalances.getAsync();
+            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[makerAddress][zrx.address].minus(amount),
+            );
+            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[takerAddress][zrx.address].add(amount),
+            );
         });
 
         it('should throw if delegating to unregistered proxy', async () => {
+            // Construct metadata for ERC20 proxy
+            const proxyMetadata = ({
+                assetProxyId: AssetProxyId.ERC20,
+                tokenAddress: zrx.address,
+                tokenId: new BigNumber(0),
+            }) as AssetTransferMetadataStruct;
+            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+
+            // Perform a transfer from makerAddress to takerAddress
+            let balances = await dmyBalances.getAsync();
+            const amount = new BigNumber(10);
+            await expect(assetTransferProxy.transferFrom.sendTransactionAsync(
+                encodedProxyMetadata, makerAddress, takerAddress, amount, { from: notOwner })
+            ).to.be.rejectedWith(constants.REVERT);
         });
 
         it('should throw if requesting address is not authorized', async () => {
-            /*await expect(assetTransferProxy.transferFrom.sendTransactionAsync(
-                AssetProxyId.ERC20, { from: notOwner })
-            ).to.be.rejectedWith(constants.REVERT);*/
+            // Register ERC20 proxy
+            await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
+
+            // Construct metadata for ERC20 proxy
+            const proxyMetadata = ({
+                assetProxyId: AssetProxyId.ERC20,
+                tokenAddress: zrx.address,
+                tokenId: new BigNumber(0),
+            }) as AssetTransferMetadataStruct;
+            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+
+            // Perform a transfer from makerAddress to takerAddress
+            let balances = await dmyBalances.getAsync();
+            const amount = new BigNumber(10);
+            await expect(assetTransferProxy.transferFrom.sendTransactionAsync(
+                encodedProxyMetadata, makerAddress, takerAddress, amount, { from: notOwner })
+            ).to.be.rejectedWith(constants.REVERT);
         });
     });
 });
