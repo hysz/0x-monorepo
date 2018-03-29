@@ -216,7 +216,6 @@ describe('Exchange', () => {
             // maker owns [0x0000.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
             ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
             ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
-            ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x3030303030303030303030303030303030303030303030303030303030303030'), { from: tokenOwner }),
@@ -229,7 +228,6 @@ describe('Exchange', () => {
 
             et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
             et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
-            et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x0000000000000000000000000000000000000000000000000000000000000000'), { from: tokenOwner }),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'), { from: tokenOwner }),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x3030303030303030303030303030303030303030303030303030303030303030'), { from: tokenOwner }),
@@ -251,80 +249,6 @@ describe('Exchange', () => {
             expect((exchange as any).transferViaTokenTransferProxy).to.be.undefined();
         });
     });
-
-    describe.only('Testing NFTs', () => {
-        it('should successfully exchange two NFTs', async () => {
-            const makerMetadata = ({
-                assetProxyId: AssetProxyId.ERC721,
-                tokenAddress: ck.address,
-                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
-            }) as AssetTransferMetadataStruct;
-
-            const takerMetadata = ({
-                assetProxyId: AssetProxyId.ERC721,
-                tokenAddress: ck.address,
-                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
-            }) as AssetTransferMetadataStruct;
-
-
-            /*var encodedMakerMetadata = encodeAssetTransferMetadata(makerMetadata);
-
-            console.log(encodedMakerMetadata);
-            const txHash = await erc721TransferProxy.logMetadata.sendTransactionAsync(encodedMakerMetadata, { from: makerAddress });
-            const tx = await zeroEx.awaitTransactionMinedAsync(txHash);
-            //tx.logs = _.filter(tx.logs, log => log.address === erc721TransferProxy.address);
-            var _logDecoder: LogDecoder = new LogDecoder(constants.TESTRPC_NETWORK_ID);
-            tx.logs = _.map(tx.logs, log => _logDecoder.decodeLogOrThrow(log));
-
-
-            for(var i = 0; i < tx.logs.length; ++i) {
-                    const log = logDecoder.decodeLogOrThrow(tx.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
-                    console.log(log);
-                    console.log();
-                    console.log();
-            }
-*/
-
-            //console.log(encodedMakerMetadata);
-
-            signedOrder = orderFactory.newSignedOrder({
-                makerTokenAddress: ck.address,
-                takerTokenAddress: ck.address,
-                makerTokenAmount: new BigNumber(1),
-                takerTokenAmount: new BigNumber(1),
-                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
-                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
-            });
-
-            console.log("---------");
-            console.log("--Maker Metadata--");
-            console.log(encodeAssetTransferMetadata(makerMetadata));
-            console.log("--Taker Metadata--");
-            console.log(encodeAssetTransferMetadata(takerMetadata));
-            console.log("--Order Hash--");
-            //console.log(signedOrder);
-            console.log("---------");
-
-            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
-            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
-            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
-            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
-
-            const takerTokenFillAmount = signedOrder.takerTokenAmount;
-            const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
-            for(var i = 0; i < res.logs.length; ++i) {
-                    const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
-                    console.log(log);
-                    console.log();
-                    console.log();
-            }
-
-            const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
-            expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
-            const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
-            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
-        });
-    })
 
     describe('fillOrder', () => {
         beforeEach(async () => {
@@ -585,6 +509,7 @@ describe('Exchange', () => {
             const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, {
                 takerTokenFillAmount: signedOrder.takerTokenAmount,
             });
+
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogFillContractEventArgs>;
             expect(log.args.takerTokenFilledAmount).to.be.bignumber.equal(
                 signedOrder.takerTokenAmount.minus(takerTokenFillAmount),
@@ -998,6 +923,347 @@ describe('Exchange', () => {
             expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(balances[takerAddress][zrx.address].minus(takerFeeAmount));
             expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
                 balances[feeRecipientAddress][zrx.address].add(makerFeeAmount.add(takerFeeAmount)),
+            );
+        });
+    });
+
+    describe.only('Testing Exchange of ERC721 Tokens', () => {
+        it('should successfully exchange a single token between the maker and taker (via fillOrder)', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
+            const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
+        });
+
+        it('should successfully exchange a single token between the maker and taker (via filleOrderNoThrow)', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            for(var i = 0; i < res.logs.length; ++i) {
+                 const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
+                 console.log(log);
+            }
+
+
+
+
+            const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
+            const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
+        });
+
+        it('should throw when maker does not own the token they are exchanging', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x5050505050505050505050505050505050505050505050505050505050505050'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
+        });
+
+        it('should throw when taker does not own the token they are exchanging', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
+        });
+        it('should throw when maker amount is not 1', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(500),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
+        });
+        it('should throw when taker amount is not 1', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(500),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
+        });
+        it('should throw on partial fill', async () => {
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: ck.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: new BigNumber(1),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+            const takerTokenFillAmount = new BigNumber(0); // partial fill
+            return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
+        });
+        it('should successfully fill order when makerToken is ERC721 and takerToken is ERC20', async () => {
+            // Construct order
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'),
+            }) as AssetTransferMetadataStruct;
+
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC20,
+                tokenAddress: dgd.address,
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                makerTokenAddress: ck.address,
+                takerTokenAddress: dgd.address,
+                makerTokenAmount: new BigNumber(1),
+                takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(100), 18),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+            });
+
+            // Verify initial conditions
+            const initialOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
+
+            // Exchange tokens
+            balances = await dmyBalances.getAsync();
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            for(var i = 0; i < res.logs.length; ++i) {
+                 const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
+                 console.log(log);
+            }
+
+            // Verify ERC721 token was transferred from Maker to Taker
+            const newOwnerMakerToken = await ck.ownerOf.callAsync(new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'));
+            expect(newOwnerMakerToken).to.be.bignumber.equal(takerAddress);
+
+            // Verify ERC20 tokens were transferred from Taker to Maker & fees were paid correctly
+            const newBalances = await dmyBalances.getAsync();
+            expect(newBalances[makerAddress][signedOrder.takerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrder.takerTokenAddress].add(takerTokenFillAmount),
+            );
+            expect(newBalances[takerAddress][signedOrder.takerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrder.takerTokenAddress].minus(takerTokenFillAmount),
+            );
+            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[makerAddress][zrx.address].minus(signedOrder.makerFeeAmount),
+            );
+            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[takerAddress][zrx.address].minus(signedOrder.takerFeeAmount),
+            );
+            expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
+                balances[feeRecipientAddress][zrx.address].add(signedOrder.makerFeeAmount.add(signedOrder.takerFeeAmount)),
+            );
+        });
+        it('should successfully fill order when makerToken is ERC20 and takerToken is ERC721', async () => {
+            // Construct order
+            const takerMetadata = ({
+                assetProxyId: AssetProxyId.ERC721,
+                tokenAddress: ck.address,
+                tokenId: new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'),
+            }) as AssetTransferMetadataStruct;
+
+            const makerMetadata = ({
+                assetProxyId: AssetProxyId.ERC20,
+                tokenAddress: dgd.address,
+            }) as AssetTransferMetadataStruct;
+
+            signedOrder = orderFactory.newSignedOrder({
+                takerTokenAddress: ck.address,
+                makerTokenAddress: dgd.address,
+                takerTokenAmount: new BigNumber(1),
+                makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(100), 18),
+                takerAssetProxyData: encodeAssetTransferMetadata(takerMetadata),
+                makerAssetProxyData: encodeAssetTransferMetadata(makerMetadata),
+            });
+
+            // Verify initial conditions
+            const initialOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
+
+            // Exchange tokens
+            balances = await dmyBalances.getAsync();
+            const takerTokenFillAmount = signedOrder.takerTokenAmount;
+            const res = await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress, { takerTokenFillAmount });
+            for(var i = 0; i < res.logs.length; ++i) {
+                 const log = logDecoder.decodeLogOrThrow(res.logs[i]) as LogWithDecodedArgs<LogFillContractEventArgs>;
+                 console.log(log);
+            }
+
+            // Verify ERC721 token was transferred from Taker to Maker
+            const newOwnerTakerToken = await ck.ownerOf.callAsync(new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'));
+            expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
+
+            // Verify ERC20 tokens were transferred from Maker to Taker & fees were paid correctly
+            const newBalances = await dmyBalances.getAsync();
+            expect(newBalances[makerAddress][signedOrder.makerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrder.makerTokenAddress].minus(signedOrder.makerTokenAmount),
+            );
+            expect(newBalances[takerAddress][signedOrder.makerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrder.makerTokenAddress].add(signedOrder.makerTokenAmount),
+            );
+            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[makerAddress][zrx.address].minus(signedOrder.makerFeeAmount),
+            );
+            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[takerAddress][zrx.address].minus(signedOrder.takerFeeAmount),
+            );
+            expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
+                balances[feeRecipientAddress][zrx.address].add(signedOrder.makerFeeAmount.add(signedOrder.takerFeeAmount)),
             );
         });
     });
