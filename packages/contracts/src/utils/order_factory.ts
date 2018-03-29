@@ -26,13 +26,6 @@ export class OrderFactory {
             ...customOrderParams,
         } as any) as UnsignedOrder;
 
-
-        const orderHashBuff2 = orderUtils.getOrderHashBuff(order);
-        console.log("---GREGS ORDER HASH---");
-        console.log(orderHashBuff2);
-        console.log("---END GREGS ORDER HASH---");
-
-
         const orderHashBuff = orderUtils.getOrderHashBuff(order);
         const signature = signingUtils.signMessage(orderHashBuff, this._privateKey, signatureType);
         const signedOrder = {
