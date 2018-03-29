@@ -68,6 +68,13 @@ contract IAssetTransferProxy is
         public view
         returns (IAssetProxy);
 
+    /// @dev Returns true if an asset proxy is registered.
+    /// @param assetProxyId Id of the asset proxy.
+    /// @return True if an asset proxy is registered. False, otherwise.
+    function isAssetProxyRegistered(uint8 assetProxyId)
+        public view
+        returns (bool);
+
     /// @dev Deregisters an asset proxy.
     /// @param assetProxyId Id of the asset proxy to deregister.
     function deregisterAssetProxy(uint8 assetProxyId)

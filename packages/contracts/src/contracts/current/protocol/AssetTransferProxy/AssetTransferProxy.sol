@@ -91,6 +91,16 @@ contract AssetTransferProxy is
         return assetProxy;
     }
 
+    /// @dev Returns true if an asset proxy is registered.
+    /// @param assetProxyId Id of the asset proxy.
+    /// @return True if an asset proxy is registered. False, otherwise.
+    function isAssetProxyRegistered(uint8 assetProxyId)
+        public view
+        returns (bool)
+    {
+        return (assetProxies[assetProxyId] != address(0x0));
+    }
+
     /// @dev Deregisters an asset proxy.
     /// @param assetProxyId Id of the asset proxy to deregister.
     function deregisterAssetProxy(uint8 assetProxyId)
