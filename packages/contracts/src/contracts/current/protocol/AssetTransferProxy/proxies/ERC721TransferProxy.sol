@@ -19,12 +19,12 @@
 pragma solidity ^0.4.21;
 
 import "./IAssetProxy.sol";
-import "./AssetProxyEncoderDecoder.sol";
+import "./LibBytes.sol";
 import "../../utils/Authorizable/Authorizable.sol";
 import "../../tokens/ERC721Token/ERC721Token.sol";
 
 contract ERC721TransferProxy is
-    AssetProxyEncoderDecoder,
+    LibBytes,
     Authorizable,
     IAssetProxy
 {
@@ -46,12 +46,49 @@ contract ERC721TransferProxy is
     {
         address token;
         uint256 tokenId;
-        (token, tokenId) = decodeERC721Metadata(assetMetadata);
+        (token, tokenId) = decodeMetadata(assetMetadata);
 
         require(amount == 1);
 
         // Todo: NoThrow
         ERC721Token(token).transferFrom(from, to, tokenId);
         return true;
+    }
+
+    /// @dev Encodes ERC721 byte array for the ERC20 asset proxy.
+    /// @param assetProxyId Id of the asset proxy.
+    /// @param tokenAddress Address of the asset.
+    /// @param tokenId Id of ERC721 token.
+    /// @return assetMetadata Byte array encoded for the ERC721 asset proxy.
+    function encodeMetadata(
+        uint8 assetProxyId,
+        address tokenAddress,
+        uint256 tokenId)
+        public pure
+        returns (bytes assetMetadata)
+    {
+        // 0 is reserved as invalid proxy id
+        require(assetProxyId != 0);
+
+        // Encode fields into a byte array
+        assetMetadata = new bytes(53);
+        assetMetadata[0] = byte(assetProxyId);
+        writeAddress(tokenAddress, assetMetadata, 1);
+        writeUint256(tokenId, assetMetadata, 21);
+        return assetMetadata;
+    }
+
+    /// @dev Decodes ERC721-encoded byte array for the ERC721 asset proxy.
+    /// @param assetMetadata Byte array encoded for the ERC721 asset proxy.
+    /// @return tokenAddress Address of ERC721 token.
+    /// @return tokenId Id of ERC721 token.
+    function decodeMetadata(bytes assetMetadata)
+        public pure
+        returns (address tokenAddress, uint256 tokenId)
+    {
+        require(assetMetadata.length == 53);
+        tokenAddress = readAddress(assetMetadata, 1);
+        tokenId = readUint256(assetMetadata, 21);
+        return (tokenAddress, tokenId);
     }
 }

@@ -22,18 +22,16 @@ pragma experimental ABIEncoderV2;
 import "./mixins/MSettlement.sol";
 import "../../tokens/Token/IToken.sol";
 import "./LibPartialAmount.sol";
-import "../AssetTransferProxy/AssetProxyEncoderDecoder.sol";
 import "../AssetTransferProxy/IAssetTransferProxy.sol";
 
 /// @dev Provides MixinSettlement
 contract MixinSettlementProxy is
     MSettlement,
-    LibPartialAmount,
-    AssetProxyEncoderDecoder
+    LibPartialAmount
 {
     IAssetTransferProxy TRANSFER_PROXY;
+    bytes ZRX_PROXY_METADATA;
     IToken ZRX_TOKEN;
-    uint8 ZRX_TOKEN_PROXY_ID;
 
     function transferProxy()
         public view
@@ -49,22 +47,22 @@ contract MixinSettlementProxy is
         return ZRX_TOKEN;
     }
 
-    function zrxTokenProxyId()
+    function zrxProxyMetadata()
         external view
-        returns (uint8)
+        returns (bytes)
     {
-        return ZRX_TOKEN_PROXY_ID;
+        return ZRX_PROXY_METADATA;
     }
 
     function MixinSettlementProxy(
         IAssetTransferProxy assetTransferProxyContract,
         IToken zrxToken,
-        uint8 zrxTokenProxyId)
+        bytes zrxProxyMetadata)
         public
     {
         ZRX_TOKEN = zrxToken;
         TRANSFER_PROXY = assetTransferProxyContract;
-        ZRX_TOKEN_PROXY_ID = zrxTokenProxyId;
+        ZRX_PROXY_METADATA = zrxProxyMetadata;
     }
 
     function settleOrder(
@@ -98,12 +96,13 @@ contract MixinSettlementProxy is
                 takerTokenFilledAmount
             )
         );
+
         if (order.feeRecipientAddress != address(0)) {
             if (order.makerFeeAmount > 0) {
                 makerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerFeeAmount);
                 require(
                     TRANSFER_PROXY.transferFrom(
-                        encodeMetadata(ZRX_TOKEN_PROXY_ID, ZRX_TOKEN),
+                        ZRX_PROXY_METADATA,
                         order.makerAddress,
                         order.feeRecipientAddress,
                         makerFeeAmountPaid
@@ -114,7 +113,7 @@ contract MixinSettlementProxy is
                 takerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.takerFeeAmount);
                 require(
                     TRANSFER_PROXY.transferFrom(
-                        encodeMetadata(ZRX_TOKEN_PROXY_ID, ZRX_TOKEN),
+                        ZRX_PROXY_METADATA,
                         takerAddress,
                         order.feeRecipientAddress,
                         takerFeeAmountPaid

@@ -128,9 +128,12 @@ describe('Exchange', () => {
             assetTransferProxyInstance.address,
         );
 
+        console.log("MISTER HYSEN, PLEASE");
+        console.log(encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: zrx.address, tokenId: new BigNumber(0)}));
+        const zrxAssetMetadata: string = encodeAssetTransferMetadata({assetProxyId: AssetProxyId.ERC20, tokenAddress: zrx.address, tokenId: new BigNumber(0)});
         const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
             zrx.address,
-            AssetProxyId.ERC20,
+            zrxAssetMetadata,
             assetTransferProxy.address,
         ]);
         exchange = new ExchangeContract(web3Wrapper, exchangeInstance.abi, exchangeInstance.address);
@@ -927,7 +930,7 @@ describe('Exchange', () => {
         });
     });
 
-    describe.only('Testing Exchange of ERC721 Tokens', () => {
+    describe('Testing Exchange of ERC721 Tokens', () => {
         it('should successfully exchange a single token between the maker and taker (via fillOrder)', async () => {
             const makerMetadata = ({
                 assetProxyId: AssetProxyId.ERC721,
