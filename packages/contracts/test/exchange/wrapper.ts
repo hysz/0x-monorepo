@@ -104,7 +104,7 @@ describe('Exchange', () => {
         );
         const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
             zrx.address,
-            AssetProxyId.ERC20,
+            encodeERC20ProxyMetadata(zrx.address),
             assetTransferProxy.address,
         ]);
         exchange = new ExchangeContract(web3Wrapper, exchangeInstance.abi, exchangeInstance.address);
@@ -343,6 +343,7 @@ describe('Exchange', () => {
                 makerTokenAddress: zrx.address,
                 makerTokenAmount: makerZRXBalance,
                 makerFeeAmount: new BigNumber(1),
+                makerAssetProxyData: encodeERC20ProxyMetadata(zrx.address)
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
             const newBalances = await dmyBalances.getAsync();
@@ -355,6 +356,7 @@ describe('Exchange', () => {
                 makerTokenAddress: zrx.address,
                 makerTokenAmount: new BigNumber(makerZRXAllowance),
                 makerFeeAmount: new BigNumber(1),
+                makerAssetProxyData: encodeERC20ProxyMetadata(zrx.address)
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
             const newBalances = await dmyBalances.getAsync();
@@ -367,6 +369,7 @@ describe('Exchange', () => {
                 takerTokenAddress: zrx.address,
                 takerTokenAmount: takerZRXBalance,
                 takerFeeAmount: new BigNumber(1),
+                takerAssetProxyData: encodeERC20ProxyMetadata(zrx.address)
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
             const newBalances = await dmyBalances.getAsync();
@@ -379,6 +382,7 @@ describe('Exchange', () => {
                 takerTokenAddress: zrx.address,
                 takerTokenAmount: new BigNumber(takerZRXAllowance),
                 takerFeeAmount: new BigNumber(1),
+                takerAssetProxyData: encodeERC20ProxyMetadata(zrx.address)
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
             const newBalances = await dmyBalances.getAsync();

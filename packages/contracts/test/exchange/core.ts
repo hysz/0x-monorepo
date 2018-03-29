@@ -852,7 +852,7 @@ describe('Exchange', () => {
         });
     });
 
-   describe.only('cancelOrdersUpTo', () => {
+   describe('cancelOrdersUpTo', () => {
         it('should fail to set makerEpoch less than current makerEpoch', async () => {
             const makerEpoch = new BigNumber(1);
             await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
@@ -870,7 +870,7 @@ describe('Exchange', () => {
             ).to.be.rejectedWith(constants.REVERT);
         });
 
-        it.only('should cancel only orders with a makerEpoch less than existing makerEpoch', async () => {
+        it('should cancel only orders with a makerEpoch less than existing makerEpoch', async () => {
             // Cancel all transactions with a makerEpoch less than 1
             const makerEpoch = new BigNumber(1);
             await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
@@ -897,7 +897,6 @@ describe('Exchange', () => {
                     salt: new BigNumber(3)}),
             ]);
             await exWrapper.batchFillOrdersNoThrowAsync(signedOrders, takerAddress);
-
             const newBalances = await dmyBalances.getAsync();
             const fillMakerTokenAmount = signedOrders[2].makerTokenAmount.add(signedOrders[3].makerTokenAmount);
             const fillTakerTokenAmount = signedOrders[2].takerTokenAmount.add(signedOrders[3].takerTokenAmount);

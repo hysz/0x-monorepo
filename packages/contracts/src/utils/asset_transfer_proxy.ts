@@ -51,12 +51,12 @@ export function encodeERC20ProxyMetadata(tokenAddress: string) {
 export function encodeERC721ProxyMetadata(tokenAddress: string, tokenId: BigNumber) {
     // Encode metadata
     var encoded_metadata = { value: "0x" };
-    encodeAssetProxyId(AssetProxyId.ERC20_V1, encoded_metadata);
+    encodeAssetProxyId(AssetProxyId.ERC721, encoded_metadata);
     encodeAddress(tokenAddress, encoded_metadata);
     encodeUint256(tokenId, encoded_metadata);
 
     // Verify encoding length - '0x' plus 53 bytes of encoded data
-    if(encoded_metadata.value.length != 104) throw Error("Bad encoding length. Expected 104, got " + encoded_metadata.value.length);
+    if(encoded_metadata.value.length != 108) throw Error("Bad encoding length. Expected 108, got " + encoded_metadata.value.length);
 
     // Return encoded metadata
     return encoded_metadata.value;
