@@ -86,17 +86,11 @@ describe.only('AssetTransferProxy', () => {
         await blockchainLifecycle.revertAsync();
     });
 
-/*
-    const nilAddress = "0x0000000000000000000000000000000000000000";
-    await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20_V1, erc20TransferProxyV1.address, nilAddress, { from: assetProxyManagerAddress });
-    await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
-    await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC721, erc721TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
-
-    */
-
     describe('registerAssetProxy', () => {
         it('should record proxy upon registration', async () => {
             await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
+            let exists = await assetTransferProxy.isAssetProxyRegistered.callAsync(AssetProxyId.ERC20);
+            expect(exists).to.be.true();
             const proxyAddress = await assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20);
             expect(proxyAddress).to.be.equal(erc20TransferProxy.address);
         });
@@ -160,9 +154,28 @@ describe.only('AssetTransferProxy', () => {
         });
     });
 
-    describe('getProxy', () => {
+    describe('getAssetProxy', () => {
+        it('should return correct address of registered proxy', async () => {
+            await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
+            const proxyAddress = await assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20);
+            expect(proxyAddress).to.be.equal(erc20TransferProxy.address);
+        });
+
         it('should throw if requesting non-existent proxy', async () => {
             await expect(assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20)).to.be.rejectedWith(constants.REVERT);
+        });
+    });
+
+    describe('isAssetProxyRegistered', () => {
+        it('should return true when calling with registered proxy', async () => {
+            await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
+            let exists = await assetTransferProxy.isAssetProxyRegistered.callAsync(AssetProxyId.ERC20);
+            expect(exists).to.be.true();
+        });
+
+        it('should return false when calling with non-existent proxy', async () => {
+            const exists = await assetTransferProxy.isAssetProxyRegistered.callAsync(AssetProxyId.ERC20);
+            expect(exists).to.be.false();
         });
     });
 
@@ -199,6 +212,7 @@ describe.only('AssetTransferProxy', () => {
 
     describe('transferFrom', () => {
         it('should delegate transfer to registered proxy', async () => {
+
         });
 
         it('should throw if delegating to unregistered proxy', async () => {
