@@ -3,118 +3,61 @@ import * as Web3 from 'web3';
 import { AssetProxyId } from './types'
 var ethersUtils = require('ethers-utils');
 
-export interface AssetTransferMetadataStruct {
-    assetProxyId: AssetProxyId;
-    tokenAddress: string;
-    tokenId: BigNumber;
-}
-
 export function zeroPad(value: string, width: number): string {
     return "0".repeat(width - value.length) + value;
 }
 
-// Returns new offset
 export function encodeAssetProxyId(assetProxyId: AssetProxyId, encoded_metadata: {value: string})//: number
 {
     encoded_metadata.value += zeroPad(new BigNumber(assetProxyId).toString(16), 2); // pad to 1 byte (2 hex chars)
-    //encoded_metadata[offset++] = assetProxyId;
-    //return offset;
 }
 
-// Returns new offset
 export function encodeAddress(address: string, encoded_metadata: {value: string})//: number
 {
     encoded_metadata.value += zeroPad(address.replace("0x", ""), 40); // pad to 20 bytes (40 hex chars)
-
-/*
-    for(var i = 0; i < address.length; ++i) {
-        encoded_metadata[offset++] = address.charCodeAt(i);
-    }*/
-    //return offset;
 }
 
-// Returns new offset
-export function encodeUint256(value: BigNumber, encoded_metadata: {value: string})//: number
+export function encodeUint256(value: BigNumber, encoded_metadata: {value: string})
 {
     encoded_metadata.value += zeroPad(value.toString(16), 64); // pad to 32 bytes (64 hex chars)
-    return;
-
-/*
-    var hex_value = value.toString(16);
-    for(var i = 0; i < 32; ++i) {
-        encoded_metadata[offset++] = parseInt(hex_value[2*i] + hex_value[2*i+1], 16);
-    }
-    /*
-    for(var i = 1; i <= 32; ++i) {
-        encoded_metadata[offset++] = (value>>(32-i)) & 0xff;
-    }
-    return offset;
-    */
-
-    //console.log("GREG 0x" + value.toString(16));
-    //return offset;
 }
 
-export function encodeAssetTransferMetadata(metadata: AssetTransferMetadataStruct): string
-{
+export function encodeERC20ProxyMetadata_V1(tokenAddress: string) {
+    // Encode metadata
     var encoded_metadata = { value: "0x" };
+    encodeAssetProxyId(AssetProxyId.ERC20_V1, encoded_metadata);
+    encodeAddress(tokenAddress, encoded_metadata);
 
-    switch(metadata.assetProxyId) {
-        case AssetProxyId.ERC20_V1:
-        case AssetProxyId.ERC20:
-            //var encoded_metadata = new Uint8Array(21);
-            var offset = 0;
-            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
-            encodeAddress(metadata.tokenAddress, encoded_metadata);
-            //return encoded_metadata;
-            break;
+    // Verify encoding length - '0x' plus 21 bytes of encoded data
+    if(encoded_metadata.value.length != 44) throw Error("Bad encoding length. Expected 44, got " + encoded_metadata.value.length);
 
-        case AssetProxyId.ERC721:
-            //var encoded_metadata = new Uint8Array(53);
-            var offset = 0;
-            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
-            encodeAddress(metadata.tokenAddress, encoded_metadata);
-            encodeUint256(metadata.tokenId, encoded_metadata);
-            //return encoded_metadata;
-            break;
-
-        default:
-            throw new Error("Unrecognized AssetProxyId: " + metadata.assetProxyId);
-    }
-
+    // Return encoded metadata
     return encoded_metadata.value;
-
-    /**** We should never reach this point ****/
 }
 
-export function encodeAssetTransferMetadataAsArray(metadata: AssetTransferMetadataStruct): Uint8Array
-{
+export function encodeERC20ProxyMetadata(tokenAddress: string) {
+    // Encode metadata
     var encoded_metadata = { value: "0x" };
+    encodeAssetProxyId(AssetProxyId.ERC20, encoded_metadata);
+    encodeAddress(tokenAddress, encoded_metadata);
 
-    switch(metadata.assetProxyId) {
-        case AssetProxyId.ERC20_V1:
-        case AssetProxyId.ERC20:
-            //var encoded_metadata = new Uint8Array(21);
-            var offset = 0;
-            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
-            encodeAddress(metadata.tokenAddress, encoded_metadata);
-            //return encoded_metadata;
-            break;
+    // Verify encoding length - '0x' plus 21 bytes of encoded data
+    if(encoded_metadata.value.length != 44) throw Error("Bad encoding length. Expected 44, got " + encoded_metadata.value.length);
 
-        case AssetProxyId.ERC721:
-            //var encoded_metadata = new Uint8Array(53);
-            var offset = 0;
-            encodeAssetProxyId(metadata.assetProxyId, encoded_metadata);
-            encodeAddress(metadata.tokenAddress, encoded_metadata);
-            encodeUint256(metadata.tokenId, encoded_metadata);
-            //return encoded_metadata;
-            break;
+    // Return encoded metadata
+    return encoded_metadata.value;
+}
 
-        default:
-            throw new Error("Unrecognized AssetProxyId: " + metadata.assetProxyId);
-    }
+export function encodeERC721ProxyMetadata(tokenAddress: string, tokenId: BigNumber) {
+    // Encode metadata
+    var encoded_metadata = { value: "0x" };
+    encodeAssetProxyId(AssetProxyId.ERC20_V1, encoded_metadata);
+    encodeAddress(tokenAddress, encoded_metadata);
+    encodeUint256(tokenId, encoded_metadata);
 
-    return ethersUtils.arrayify(encoded_metadata.value);
+    // Verify encoding length - '0x' plus 53 bytes of encoded data
+    if(encoded_metadata.value.length != 104) throw Error("Bad encoding length. Expected 104, got " + encoded_metadata.value.length);
 
-    /**** We should never reach this point ****/
+    // Return encoded metadata
+    return encoded_metadata.value;
 }

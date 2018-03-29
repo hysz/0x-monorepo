@@ -16,14 +16,14 @@ import { constants } from '../../src/utils/constants';
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
-import {AssetTransferMetadataStruct, encodeAssetTransferMetadata} from '../../src/utils/asset_transfer_proxy';
+import {encodeERC20ProxyMetadata_V1, encodeERC20ProxyMetadata, encodeERC721ProxyMetadata} from '../../src/utils/asset_transfer_proxy';
 import { ContractName, AssetProxyId } from '../../src/utils/types';
 
 chaiSetup.configure();
 const expect = chai.expect;
 const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
 
-describe.only('AssetTransferProxy', () => {
+describe('AssetTransferProxy', () => {
     let owner: string;
     let notOwner: string;
     let assetProxyManagerAddress: string;
@@ -239,12 +239,7 @@ describe.only('AssetTransferProxy', () => {
             await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
 
             // Construct metadata for ERC20 proxy
-            const proxyMetadata = ({
-                assetProxyId: AssetProxyId.ERC20,
-                tokenAddress: zrx.address,
-                tokenId: new BigNumber(0),
-            }) as AssetTransferMetadataStruct;
-            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+            const encodedProxyMetadata = encodeERC20ProxyMetadata(zrx.address);
 
             // Perform a transfer from makerAddress to takerAddress
             let balances = await dmyBalances.getAsync();
@@ -263,12 +258,7 @@ describe.only('AssetTransferProxy', () => {
 
         it('should throw if delegating to unregistered proxy', async () => {
             // Construct metadata for ERC20 proxy
-            const proxyMetadata = ({
-                assetProxyId: AssetProxyId.ERC20,
-                tokenAddress: zrx.address,
-                tokenId: new BigNumber(0),
-            }) as AssetTransferMetadataStruct;
-            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+            const encodedProxyMetadata = encodeERC20ProxyMetadata(zrx.address);
 
             // Perform a transfer from makerAddress to takerAddress
             let balances = await dmyBalances.getAsync();
@@ -283,12 +273,7 @@ describe.only('AssetTransferProxy', () => {
             await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
 
             // Construct metadata for ERC20 proxy
-            const proxyMetadata = ({
-                assetProxyId: AssetProxyId.ERC20,
-                tokenAddress: zrx.address,
-                tokenId: new BigNumber(0),
-            }) as AssetTransferMetadataStruct;
-            const encodedProxyMetadata = encodeAssetTransferMetadata(proxyMetadata);
+            const encodedProxyMetadata = encodeERC20ProxyMetadata(zrx.address);
 
             // Perform a transfer from makerAddress to takerAddress
             let balances = await dmyBalances.getAsync();
