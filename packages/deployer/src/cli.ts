@@ -26,7 +26,7 @@ const DEFAULT_CONTRACTS_LIST = '*';
  */
 async function onCompileCommand(argv: CliOptions): Promise<void> {
     const opts: CompilerOptions = {
-        contractDirs: getContractDirectoriesFromList(argv.contractsDir),
+        contractDirs: getContractDirectoriesFromList(argv.contractDirs),
         networkId: argv.networkId,
         optimizerEnabled: argv.shouldOptimize ? 1 : 0,
         artifactsDir: argv.artifactsDir,
@@ -128,10 +128,10 @@ function deployCommandBuilder(yargsInstance: any) {
 (() => {
     const identityCommandBuilder = _.identity;
     return yargs
-        .option('contracts-dir', {
+        .option('contract-dirs', {
             type: 'string',
             default: DEFAULT_CONTRACTS_DIR,
-            description: 'path of contracts directory to compile',
+            description: 'comma separated list of contract directories.\nTo avoid filename clashes, directories should be prefixed with a namespace as follows: \'namespace:/path/to/dir\'.',
         })
         .option('network-id', {
             type: 'number',
