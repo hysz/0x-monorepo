@@ -15,6 +15,9 @@ import {
     LogFillContractEventArgs,
 } from '../../src/contract_wrappers/generated/exchange';
 import { TokenTransferProxyContract } from '../../src/contract_wrappers/generated/token_transfer_proxy';
+import { AssetTransferProxyContract } from '../../src/contract_wrappers/generated/asset_transfer_proxy';
+import { ERC20TransferProxyContract } from '../../src/contract_wrappers/generated/e_r_c20_transfer_proxy';
+import { ERC20TransferProxy_v1Contract } from '../../src/contract_wrappers/generated/erc20transferproxy_v1';
 import { Balances } from '../../src/utils/balances';
 import { constants } from '../../src/utils/constants';
 import { crypto } from '../../src/utils/crypto';
@@ -22,7 +25,7 @@ import { ExchangeWrapper } from '../../src/utils/exchange_wrapper';
 import { LogDecoder } from '../../src/utils/log_decoder';
 import { OrderFactory } from '../../src/utils/order_factory';
 import { orderUtils } from '../../src/utils/order_utils';
-import { BalancesByOwner, ContractName, ExchangeContractErrs, SignatureType, SignedOrder } from '../../src/utils/types';
+import { BalancesByOwner, ContractName, ExchangeContractErrs, SignatureType, SignedOrder, AssetProxyId } from '../../src/utils/types';
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
@@ -37,6 +40,7 @@ describe('Exchange', () => {
     let tokenOwner: string;
     let takerAddress: string;
     let feeRecipientAddress: string;
+    let assetProxyManagerAddress: string;
     const INITIAL_BALANCE = ZeroEx.toBaseUnitAmount(new BigNumber(10000), 18);
     const INITIAL_ALLOWANCE = ZeroEx.toBaseUnitAmount(new BigNumber(10000), 18);
 
@@ -45,6 +49,9 @@ describe('Exchange', () => {
     let zrx: DummyTokenContract;
     let exchange: ExchangeContract;
     let tokenTransferProxy: TokenTransferProxyContract;
+    let assetTransferProxy: AssetTransferProxyContract;
+    let erc20TransferProxyV1: ERC20TransferProxy_v1Contract;
+    let erc20TransferProxy: ERC20TransferProxyContract;
 
     let signedOrder: SignedOrder;
     let balances: BalancesByOwner;
@@ -57,7 +64,7 @@ describe('Exchange', () => {
     before(async () => {
         const accounts = await web3Wrapper.getAvailableAddressesAsync();
         makerAddress = accounts[0];
-        [tokenOwner, takerAddress, feeRecipientAddress] = accounts;
+        [tokenOwner, takerAddress, feeRecipientAddress, assetProxyManagerAddress] = accounts;
         const [repInstance, dgdInstance, zrxInstance] = await Promise.all([
             deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS),
             deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS),
@@ -72,12 +79,44 @@ describe('Exchange', () => {
             tokenTransferProxyInstance.abi,
             tokenTransferProxyInstance.address,
         );
-        const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
-            zrx.address,
+
+        const erc20TransferProxyV1Instance = await deployer.deployAsync(ContractName.ERC20TransferProxy_V1, [
             tokenTransferProxy.address,
         ]);
+        erc20TransferProxyV1 = new ERC20TransferProxy_v1Contract(
+            web3Wrapper,
+            erc20TransferProxyV1Instance.abi,
+            erc20TransferProxyV1Instance.address,
+        );
+
+        const erc20TransferProxyInstance = await deployer.deployAsync(ContractName.ERC20TransferProxy);
+        erc20TransferProxy = new ERC20TransferProxyContract(
+            web3Wrapper,
+            erc20TransferProxyInstance.abi,
+            erc20TransferProxyInstance.address,
+        );
+
+        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
+        assetTransferProxy = new AssetTransferProxyContract(
+            web3Wrapper,
+            assetTransferProxyInstance.abi,
+            assetTransferProxyInstance.address,
+        );
+
+        const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
+            zrx.address,
+            AssetProxyId.ERC20,
+            assetTransferProxy.address,
+        ]);
         exchange = new ExchangeContract(web3Wrapper, exchangeInstance.abi, exchangeInstance.address);
-        await tokenTransferProxy.addAuthorizedAddress.sendTransactionAsync(exchange.address, { from: accounts[0] });
+        await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, { from: accounts[0] });
+        await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(exchange.address, { from: accounts[0] });
+        await erc20TransferProxyV1.addAuthorizedAddress.sendTransactionAsync(assetTransferProxy.address, { from: accounts[0] });
+        await erc20TransferProxy.addAuthorizedAddress.sendTransactionAsync(assetTransferProxy.address, { from: accounts[0] });
+        await tokenTransferProxy.addAuthorizedAddress.sendTransactionAsync(erc20TransferProxyV1.address, { from: accounts[0] });
+        const nilAddress = "0x0000000000000000000000000000000000000000";
+        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20_V1, erc20TransferProxyV1.address, nilAddress, { from: assetProxyManagerAddress });
+        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, erc20TransferProxy.address, nilAddress, { from: assetProxyManagerAddress });
         zeroEx = new ZeroEx(web3.currentProvider, {
             exchangeContractAddress: exchange.address,
             networkId: constants.TESTRPC_NETWORK_ID,
@@ -94,6 +133,8 @@ describe('Exchange', () => {
             takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
             makerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
             takerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
+            makerAssetProxyId: AssetProxyId.ERC20,
+            takerAssetProxyId: AssetProxyId.ERC20,
         };
         const privateKey = constants.TESTRPC_PRIVATE_KEYS[0];
         orderFactory = new OrderFactory(privateKey, defaultOrderParams);
@@ -105,6 +146,12 @@ describe('Exchange', () => {
             rep.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
                 from: takerAddress,
             }),
+            rep.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
+                from: makerAddress,
+            }),
+            rep.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
+                from: takerAddress,
+            }),
             rep.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             rep.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             dgd.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
@@ -113,12 +160,24 @@ describe('Exchange', () => {
             dgd.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
                 from: takerAddress,
             }),
+            dgd.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
+                from: makerAddress,
+            }),
+            dgd.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
+                from: takerAddress,
+            }),
             dgd.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             dgd.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             zrx.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
                 from: makerAddress,
             }),
             zrx.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
+                from: takerAddress,
+            }),
+            zrx.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
+                from: makerAddress,
+            }),
+            zrx.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
                 from: takerAddress,
             }),
             zrx.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner }),
@@ -739,6 +798,77 @@ describe('Exchange', () => {
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogErrorContractEventArgs>;
             const errCode = log.args.errorId;
             expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_EXPIRED);
+        });
+    });
+
+   describe('cancelOrdersUpTo', () => {
+        it('should fail to set makerEpoch less than current makerEpoch', async () => {
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+            const lesserMakerEpoch = new BigNumber(0);
+            return expect(
+                exWrapper.cancelOrdersUpToAsync(lesserMakerEpoch, makerAddress),
+            ).to.be.rejectedWith(constants.REVERT);
+        });
+
+        it('should fail to set makerEpoch equal to existing makerEpoch', async () => {
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+            return expect(
+                exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress),
+            ).to.be.rejectedWith(constants.REVERT);
+        });
+
+        it('should cancel only orders with a makerEpoch less than existing makerEpoch', async () => {
+            // Cancel all transactions with a makerEpoch less than 1
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+
+            // Create 3 orders with makerEpoch values: 0,1,2,3
+            // Since we cancelled with makerEpoch=1, orders with makerEpoch<=1 will not be processed
+            balances = await dmyBalances.getAsync();
+            const signedOrders = await Promise.all([
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(9), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(9), 18),
+                    salt: new BigNumber(0)}),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(79), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(79), 18),
+                    salt: new BigNumber(1)}),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(979), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(979), 18),
+                    salt: new BigNumber(2)}),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(7979), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(7979), 18),
+                    salt: new BigNumber(3)}),
+            ]);
+            await exWrapper.batchFillOrdersNoThrowAsync(signedOrders, takerAddress);
+
+            const newBalances = await dmyBalances.getAsync();
+            const fillMakerTokenAmount = signedOrders[2].makerTokenAmount.add(signedOrders[3].makerTokenAmount);
+            const fillTakerTokenAmount = signedOrders[2].takerTokenAmount.add(signedOrders[3].takerTokenAmount);
+            const makerFeeAmount = signedOrders[2].makerFeeAmount.add(signedOrders[3].makerFeeAmount);
+            const takerFeeAmount = signedOrders[2].takerFeeAmount.add(signedOrders[3].takerFeeAmount);
+            expect(newBalances[makerAddress][signedOrders[3].makerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrders[3].makerTokenAddress].minus(fillMakerTokenAmount),
+            );
+            expect(newBalances[makerAddress][signedOrders[3].takerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrders[3].takerTokenAddress].add(fillTakerTokenAmount),
+            );
+            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(balances[makerAddress][zrx.address].minus(makerFeeAmount));
+            expect(newBalances[takerAddress][signedOrders[3].takerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrders[3].takerTokenAddress].minus(fillTakerTokenAmount),
+            );
+            expect(newBalances[takerAddress][signedOrders[3].makerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrders[3].makerTokenAddress].add(fillMakerTokenAmount),
+            );
+            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(balances[takerAddress][zrx.address].minus(takerFeeAmount));
+            expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
+                balances[feeRecipientAddress][zrx.address].add(makerFeeAmount.add(takerFeeAmount)),
+            );
         });
     });
 }); // tslint:disable-line:max-file-line-count

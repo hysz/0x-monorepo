@@ -18,36 +18,42 @@
 
 pragma solidity ^0.4.21;
 
-import { Token_v1 as Token } from "../../../previous/Token/Token_v1.sol";
-import "./ITokenTransferProxy.sol";
+import "./IAssetProxy.sol";
+import "./AssetProxyEncoderDecoder.sol";
+import "../TokenTransferProxy/ITokenTransferProxy.sol";
 import "../../utils/Authorizable/Authorizable.sol";
 
-/// @title TokenTransferProxy - Transfers tokens on behalf of contracts that have been approved via decentralized governance.
-/// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
-contract TokenTransferProxy is
+contract ERC20TransferProxy_v1 is
+    AssetProxyEncoderDecoder,
     Authorizable,
-    ITokenTransferProxy
+    IAssetProxy
 {
+    ITokenTransferProxy TRANSFER_PROXY;
 
-    /*
-     * Public functions
-     */
+    /// @dev Contract constructor.
+    /// @param tokenTransferProxyContract erc20 token transfer proxy contract.
+    function ERC20TransferProxy_v1(ITokenTransferProxy tokenTransferProxyContract)
+        public
+    {
+        TRANSFER_PROXY = tokenTransferProxyContract;
+    }
 
-    /// @dev Calls into ERC20 Token contract, invoking transferFrom.
-    /// @param token Address of token to transfer.
+    /// @dev Transfers ERC20 tokens.
+    /// @param assetMetadata Byte array encoded for the respective asset proxy.
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
-    /// @param value Amount of token to transfer.
+    /// @param amount Amount of token to transfer.
     /// @return Success of transfer.
     function transferFrom(
-        address token,
+        bytes assetMetadata,
         address from,
         address to,
-        uint value)
+        uint256 amount)
         public
         onlyAuthorized
-        returns (bool)
+        returns (bool success)
     {
-        return Token(token).transferFrom(from, to, value);
+        address token = decodeERC20Metadata(assetMetadata);
+        return TRANSFER_PROXY.transferFrom(token, from, to, amount);
     }
 }

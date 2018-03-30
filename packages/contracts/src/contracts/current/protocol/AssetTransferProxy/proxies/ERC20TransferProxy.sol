@@ -18,21 +18,33 @@
 
 pragma solidity ^0.4.21;
 
-/// @title TokenTransferProxy - Transfers tokens on behalf of contracts that have been approved via decentralized governance.
-/// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
-contract ITokenTransferProxy {
+import "./IAssetProxy.sol";
+import "./AssetProxyEncoderDecoder.sol";
+import "../../utils/Authorizable/Authorizable.sol";
+import { Token_v1 as Token } from "../../../previous/Token/Token_v1.sol";
 
-    /// @dev Calls into ERC20 Token contract, invoking transferFrom.
-    /// @param token Address of token to transfer.
+contract ERC20TransferProxy is
+    AssetProxyEncoderDecoder,
+    Authorizable,
+    IAssetProxy
+{
+
+    /// @dev Transfers ERC20 tokens.
+    /// @param assetMetadata Byte array encoded for the respective asset proxy.
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
-    /// @param value Amount of token to transfer.
+    /// @param amount Amount of token to transfer.
     /// @return Success of transfer.
     function transferFrom(
-        address token,
+        bytes assetMetadata,
         address from,
         address to,
-        uint value)
+        uint256 amount)
         public
-        returns (bool);
+        onlyAuthorized
+        returns (bool success)
+    {
+        address token = decodeERC20Metadata(assetMetadata);
+        return Token(token).transferFrom(from, to, amount);
+    }
 }
