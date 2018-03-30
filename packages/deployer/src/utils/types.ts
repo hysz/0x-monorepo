@@ -18,6 +18,15 @@ export interface ContractNetworks {
     [key: number]: ContractNetworkData;
 }
 
+export interface AbiDefinition {
+    name: string,
+    type: string,
+}
+
+export interface ContractAbi {
+    [key: number]: AbiDefinition;
+}
+
 export interface ContractNetworkData {
     solc_version: string;
     optimizer_enabled: number;
@@ -114,6 +123,10 @@ export interface Token {
     decimals: number;
     ipfsHash: string;
     swarmHash: string;
+}
+
+export interface FunctionList {
+    [key: string]: number;
 }
 
 export type DoneCallback = (err?: Error) => void;

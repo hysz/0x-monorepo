@@ -18,10 +18,11 @@
 
 pragma solidity ^0.4.21;
 
-import "./IAssetProxy.sol";
-import "./LibBytes.sol";
-import "../../utils/Authorizable/Authorizable.sol";
-import "../../tokens/ERC721Token/ERC721Token.sol";
+import "../IAssetProxy.sol";
+import "../../../utils/LibBytes/LibBytes.sol";
+import "../../../utils/Authorizable/Authorizable.sol";
+import "/token/ERC721/ERC721Token.sol";
+
 
 contract ERC721TransferProxy is
     LibBytes,

@@ -17,7 +17,7 @@
 */
 
 pragma solidity ^0.4.21;
-import "../../tokens/ERC721Token/ERC721Token.sol";
+import "/token/ERC721/ERC721Token.sol";
 import "../../utils/Ownable/Ownable.sol";
 
 contract DummyERC721Token is

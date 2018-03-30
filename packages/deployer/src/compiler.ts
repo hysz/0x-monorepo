@@ -19,6 +19,8 @@ import {
     ContractSourceData,
     ContractSources,
     ContractSpecificSourceData,
+    AbiDefinition,
+    FunctionList,
 } from './utils/types';
 import { utils } from './utils/utils';
 
@@ -42,7 +44,7 @@ export class Compiler {
      * @param  dirPath Directory to search.
      * @return Mapping of contract fileName to contract source.
      */
-    private static async _getContractSourcesAsync(dirPath: string): Promise<ContractSources> {
+    private static async _getContractSourcesAsync(dirPath: string, baseDirPath: string): Promise<ContractSources> {
         let dirContents: string[] = [];
         try {
             dirContents = await fsWrapper.readdirAsync(dirPath);
@@ -58,14 +60,16 @@ export class Compiler {
                         encoding: 'utf8',
                     };
                     const source = await fsWrapper.readFileAsync(contentPath, opts);
-                    sources[fileName] = source;
+                    const relativePath = contentPath.substr(baseDirPath.length);
+                    console.log("Tracking " + relativePath);
+                    sources[relativePath] = source;
                     logUtils.log(`Reading ${fileName} source...`);
                 } catch (err) {
                     logUtils.log(`Could not find file at ${contentPath}`);
                 }
             } else {
                 try {
-                    const nestedSources = await Compiler._getContractSourcesAsync(contentPath);
+                    const nestedSources = await Compiler._getContractSourcesAsync(contentPath, baseDirPath);
                     sources = {
                         ...sources,
                         ...nestedSources,
@@ -82,7 +86,8 @@ export class Compiler {
      * @param source Source code of contract.
      * @return Object with contract dependencies and keccak256 hash of source.
      */
-    private static _getContractSpecificSourceData(source: string): ContractSpecificSourceData {
+    private static _getContractSpecificSourceData(sourceFileName: string, source: string): ContractSpecificSourceData {
+        console.log("HYSEN EYO");
         const dependencies: string[] = [];
         const sourceHash = ethUtil.sha3(source);
         const solcVersion = Compiler._parseSolidityVersion(source);
@@ -97,7 +102,8 @@ export class Compiler {
                 const dependencyMatch = line.match(DEPENDENCY_PATH_REGEX);
                 if (!_.isNull(dependencyMatch)) {
                     const dependencyPath = dependencyMatch[1];
-                    const fileName = path.basename(dependencyPath);
+                    const fileName = dependencyPath.substr(0,1) == '/' ? dependencyPath : path.join(path.dirname(sourceFileName), dependencyPath);
+                    console.log("HYSEN\n" + sourceFileName + "\n" + dependencyPath + "\n" +  fileName);
                     contractSpecificSourceData.dependencies.push(fileName);
                 }
             }
@@ -164,10 +170,22 @@ export class Compiler {
      */
     public async compileAllAsync(): Promise<void> {
         await this._createArtifactsDirIfDoesNotExistAsync();
-        this._contractSources = await Compiler._getContractSourcesAsync(this._contractsDir);
+        this._contractSources = await Compiler._getContractSourcesAsync(this._contractsDir, this._contractsDir);
         _.forIn(this._contractSources, (source, fileName) => {
-            this._contractSourceData[fileName] = Compiler._getContractSpecificSourceData(source);
+            console.log(fileName);
+            this._contractSourceData[fileName] = Compiler._getContractSpecificSourceData(fileName, source);
         });
+
+        let friends = await Compiler._getContractSourcesAsync("/Users/greg/dev/greg-0x-monorepo/node_modules/zeppelin-solidity/contracts", "/Users/greg/dev/greg-0x-monorepo/node_modules/zeppelin-solidity/contracts");
+        _.forIn(friends, (source, fileName) => {
+            console.log(fileName);
+            if(! _.isUndefined(this._contractSources[fileName])) {
+                throw new Error("We already have a file named: " + fileName + "(" + this._contractSources[fileName] + ")");
+            }
+            this._contractSources[fileName] = source;
+            this._contractSourceData[fileName] = Compiler._getContractSpecificSourceData(fileName, source);
+        });
+
         const fileNames = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
             ? _.keys(this._contractSources)
             : Array.from(this._specifiedContracts.values());
@@ -250,6 +268,23 @@ export class Compiler {
         const sourceMapRuntime = compiled.contracts[contractIdentifier].srcmapRuntime;
         const sources = _.keys(compiled.sources);
         const updated_at = Date.now();
+
+        // There is no function overloading in typescript, so we must change the Typescript ABI interface.
+        // Overloaded function names are incremented as follows: functionName, functionName2, functioname3, ...
+        const functions:FunctionList = {};
+        for(let i = 0; i < abi.length; ++i) {
+            const type:string = abi[i].type;
+            if(type === "function") {
+                const name:string = (abi[i] as any).name;
+                if(name in functions) {
+                    functions[name]++;
+                    (abi[i] as any).name += "_" + functions[name];
+                } else {
+                    functions[name] = 1;
+                }
+            }
+        }
+
         const contractNetworkData: ContractNetworkData = {
             solc_version: contractSpecificSourceData.solcVersion,
             keccak256: sourceHash,
@@ -323,7 +358,8 @@ export class Compiler {
      * @return Import contents object containing source code of dependency.
      */
     private _findImportsIfSourcesExist(importPath: string): solc.ImportContents {
-        const fileName = path.basename(importPath);
+
+        const fileName = importPath;
         const source = this._contractSources[fileName];
         if (_.isUndefined(source)) {
             throw new Error(`Contract source not found for ${fileName}`);
