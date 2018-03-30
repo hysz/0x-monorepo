@@ -14,7 +14,7 @@ import { ContractName, SignedOrder, AssetProxyId } from '../../src/utils/types';
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
-import {encodeERC20ProxyMetadata_V1, encodeERC20ProxyMetadata, encodeERC721ProxyMetadata} from '../../src/utils/asset_transfer_proxy';
+import {encodeERC20ProxyMetadata_V1, encodeERC20ProxyMetadata, encodeERC721ProxyMetadata} from '../../src/utils/asset_transfer_proxy_utils';
 
 chaiSetup.configure();
 const expect = chai.expect;
