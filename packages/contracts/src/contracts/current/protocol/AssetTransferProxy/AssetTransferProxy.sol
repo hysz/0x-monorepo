@@ -34,7 +34,6 @@ contract AssetTransferProxy is
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
     /// @param amount Amount of token to transfer.
-    /// @return Success of transfer.
     function transferFrom(
         bytes assetMetadata,
         address from,
@@ -42,7 +41,6 @@ contract AssetTransferProxy is
         uint256 amount)
         public
         onlyAuthorized
-        returns (bool)
     {
         // Lookup asset proxy
         require(assetMetadata.length >= 1);
@@ -51,7 +49,7 @@ contract AssetTransferProxy is
         require(assetProxy != address(0x0));
 
         // Delegate transfer to asset proxy
-        return assetProxy.transferFrom(assetMetadata, from, to, amount);
+        assetProxy.transferFrom(assetMetadata, from, to, amount);
     }
 
     /// @dev Registers a new asset proxy.

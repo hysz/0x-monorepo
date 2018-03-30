@@ -79,45 +79,37 @@ contract MixinSettlementProxy is
         makerTokenFilledAmount = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerTokenAmount);
         bytes32 orderHash = getOrderHash(order);
 
-        require(
-            TRANSFER_PROXY.transferFrom(
-                order.makerAssetProxyData,
-                order.makerAddress,
-                takerAddress,
-                makerTokenFilledAmount
-            )
+        TRANSFER_PROXY.transferFrom(
+            order.makerAssetProxyData,
+            order.makerAddress,
+            takerAddress,
+            makerTokenFilledAmount
         );
 
-        require(
-            TRANSFER_PROXY.transferFrom(
-                order.takerAssetProxyData,
-                takerAddress,
-                order.makerAddress,
-                takerTokenFilledAmount
-            )
+        TRANSFER_PROXY.transferFrom(
+            order.takerAssetProxyData,
+            takerAddress,
+            order.makerAddress,
+            takerTokenFilledAmount
         );
 
         if (order.feeRecipientAddress != address(0)) {
             if (order.makerFeeAmount > 0) {
                 makerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.makerFeeAmount);
-                require(
-                    TRANSFER_PROXY.transferFrom(
-                        ZRX_PROXY_METADATA,
-                        order.makerAddress,
-                        order.feeRecipientAddress,
-                        makerFeeAmountPaid
-                    )
+                TRANSFER_PROXY.transferFrom(
+                    ZRX_PROXY_METADATA,
+                    order.makerAddress,
+                    order.feeRecipientAddress,
+                    makerFeeAmountPaid
                 );
             }
             if (order.takerFeeAmount > 0) {
                 takerFeeAmountPaid = getPartialAmount(takerTokenFilledAmount, order.takerTokenAmount, order.takerFeeAmount);
-                require(
-                    TRANSFER_PROXY.transferFrom(
-                        ZRX_PROXY_METADATA,
-                        takerAddress,
-                        order.feeRecipientAddress,
-                        takerFeeAmountPaid
-                    )
+                TRANSFER_PROXY.transferFrom(
+                    ZRX_PROXY_METADATA,
+                    takerAddress,
+                    order.feeRecipientAddress,
+                    takerFeeAmountPaid
                 );
             }
         }

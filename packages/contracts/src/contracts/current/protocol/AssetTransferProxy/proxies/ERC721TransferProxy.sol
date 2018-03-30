@@ -34,7 +34,6 @@ contract ERC721TransferProxy is
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
     /// @param amount Amount of token to transfer.
-    /// @return Success of transfer.
     function transferFrom(
         bytes assetMetadata,
         address from,
@@ -42,17 +41,17 @@ contract ERC721TransferProxy is
         uint256 amount)
         public
         onlyAuthorized
-        returns (bool success)
     {
+        // Decode metadata
         address token;
         uint256 tokenId;
         (token, tokenId) = decodeMetadata(assetMetadata);
 
+        // There exists only 1 of each token.
         require(amount == 1);
 
-        // Todo: NoThrow
+        // Delegate call to ERC721 contract
         ERC721Token(token).transferFrom(from, to, tokenId);
-        return true;
     }
 
     /// @dev Encodes ERC721 byte array for the ERC20 asset proxy.

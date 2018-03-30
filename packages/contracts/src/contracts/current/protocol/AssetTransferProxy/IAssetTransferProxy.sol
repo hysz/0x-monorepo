@@ -42,14 +42,12 @@ contract IAssetTransferProxy is
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
     /// @param amount Amount of token to transfer.
-    /// @return Success of transfer.
     function transferFrom(
         bytes assetMetadata,
         address from,
         address to,
         uint256 amount)
-        public
-        returns (bool);
+        public;
 
     /// @dev Registers a new asset proxy.
     /// @param assetProxyId Id of the asset proxy.

@@ -43,7 +43,6 @@ contract ERC20TransferProxy_v1 is
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
     /// @param amount Amount of token to transfer.
-    /// @return Success of transfer.
     function transferFrom(
         bytes assetMetadata,
         address from,
@@ -51,10 +50,9 @@ contract ERC20TransferProxy_v1 is
         uint256 amount)
         public
         onlyAuthorized
-        returns (bool success)
     {
         address token = decodeMetadata(assetMetadata);
-        return TRANSFER_PROXY.transferFrom(token, from, to, amount);
+        require(TRANSFER_PROXY.transferFrom(token, from, to, amount));
     }
 
     /// @dev Encodes ERC20 byte array for the ERC20 asset proxy.
