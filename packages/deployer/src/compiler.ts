@@ -32,7 +32,7 @@ const IMPORT_REGEX = /(import\s)/;
 const DEPENDENCY_PATH_REGEX = /"([^"]+)"/; // Source: https://github.com/BlockChainCompany/soljitsu/blob/master/lib/shared.js
 
 export class Compiler {
-    private _contractsDir: Set<ContractDirectory>;
+    private _contractDirs: Set<ContractDirectory>;
     private _networkId: number;
     private _optimizerEnabled: number;
     private _artifactsDir: string;
@@ -199,20 +199,19 @@ export class Compiler {
      * @return An instance of the Compiler class.
      */
     constructor(opts: CompilerOptions) {
-        this._contractsDir = opts.contractsDir;
+        this._contractDirs = opts.contractDirs;
         this._networkId = opts.networkId;
         this._optimizerEnabled = opts.optimizerEnabled;
         this._artifactsDir = opts.artifactsDir;
         this._specifiedContracts = opts.specifiedContracts;
     }
     /**
-     * Compiles all Solidity files found in contractsDir and writes JSON artifacts to artifactsDir.
+     * Compiles all Solidity files found in contractDirs and writes JSON artifacts to artifactsDir.
      */
     public async compileAllAsync(): Promise<void> {
         await this._createArtifactsDirIfDoesNotExistAsync();
         this._contractSources = {};
-        let contractDirs = this._contractsDir;
-        for(let contractDir of Array.from(contractDirs.values())) {
+        for(let contractDir of Array.from(this._contractDirs.values())) {
             let sources = await Compiler._getContractSourcesAsync(contractDir.path, contractDir.path);
             _.forIn(sources, (source, sourceFilePath) => {
                 // Construct a unique ID for this source file

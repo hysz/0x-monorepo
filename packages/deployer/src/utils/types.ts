@@ -54,7 +54,7 @@ export interface SolcErrors {
 
 export interface CliOptions extends yargs.Arguments {
     artifactsDir: string;
-    contractsDir: string;
+    contractDirs: string;
     jsonrpcUrl: string;
     networkId: number;
     shouldOptimize: boolean;
@@ -65,7 +65,7 @@ export interface CliOptions extends yargs.Arguments {
 }
 
 export interface CompilerOptions {
-    contractsDir: Set<ContractDirectory>;
+    contractDirs: Set<ContractDirectory>;
     networkId: number;
     optimizerEnabled: number;
     artifactsDir: string;

@@ -23,7 +23,7 @@ const DEFAULT_CONTRACTS_LIST = '*';
  */
 async function onCompileCommand(argv: CliOptions): Promise<void> {
     const opts: CompilerOptions = {
-        contractsDir: getContractDirectoriesFromList(argv.contractsDir),
+        contractDirs: getContractDirectoriesFromList(argv.contractsDir),
         networkId: argv.networkId,
         optimizerEnabled: argv.shouldOptimize ? 1 : 0,
         artifactsDir: argv.artifactsDir,
@@ -41,7 +41,7 @@ async function onDeployCommand(argv: CliOptions): Promise<void> {
     const web3Wrapper = new Web3Wrapper(web3Provider);
     const networkId = await web3Wrapper.getNetworkIdAsync();
     const compilerOpts: CompilerOptions = {
-        contractsDir: getContractDirectoriesFromList(argv.contractsDir),
+        contractDirs: getContractDirectoriesFromList(argv.contractsDir),
         networkId,
         optimizerEnabled: argv.shouldOptimize ? 1 : 0,
         artifactsDir: argv.artifactsDir,
