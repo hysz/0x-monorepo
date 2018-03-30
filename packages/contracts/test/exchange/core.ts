@@ -31,9 +31,10 @@ import { BalancesByOwner, ContractName, ExchangeContractErrs, SignatureType, Sig
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
 import { web3, web3Wrapper } from '../utils/web3_wrapper';
-import {encodeERC20ProxyMetadata_V1, encodeERC20ProxyMetadata, encodeERC721ProxyMetadata} from '../../src/utils/asset_transfer_proxy_utils';
-
-//import * as ethersUtils from 'ethers-utils/convert';
+import {
+	encodeERC20ProxyMetadata_V1,
+	encodeERC20ProxyMetadata,
+	encodeERC721ProxyMetadata} from '../../src/utils/asset_transfer_proxy_utils';
 
 import * as _ from 'lodash';
 
@@ -112,7 +113,7 @@ describe('Exchange', () => {
             erc20TransferProxyInstance.address,
         );
 
-         erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
+        erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
         erc721TransferProxy = new ERC721TransferProxyContract(
             web3Wrapper,
             erc721TransferProxyInstance.abi,
@@ -208,8 +209,8 @@ describe('Exchange', () => {
             zrx.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner }),
             zrx.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner }),
 
-            // Distribute NFTs to maker & taker
-            // maker owns [0x0000.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
+            // Distribute ck ERC721 tokens to maker & taker
+            // maker owns [0x1010.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
             ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
             ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
             ck.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
@@ -222,6 +223,8 @@ describe('Exchange', () => {
             ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x8080808080808080808080808080808080808080808080808080808080808080'), { from: tokenOwner }),
             ck.mint.sendTransactionAsync(takerAddress, new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090'), { from: tokenOwner }),
 
+            // Distribute et ERC721 tokens to maker & taker
+            // maker owns [0x1010.., ... , 0x4040..] and taker owns [0x5050.., ..., 0x9090..]
             et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: makerAddress}),
             et.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, {from: takerAddress}),
             et.mint.sendTransactionAsync(makerAddress, new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010'), { from: tokenOwner }),
@@ -505,7 +508,6 @@ describe('Exchange', () => {
             const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, {
                 takerTokenFillAmount: signedOrder.takerTokenAmount,
             });
-
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogFillContractEventArgs>;
             expect(log.args.takerTokenFilledAmount).to.be.bignumber.equal(
                 signedOrder.takerTokenAmount.minus(takerTokenFillAmount),
@@ -983,7 +985,7 @@ describe('Exchange', () => {
             expect(newOwnerTakerToken).to.be.bignumber.equal(makerAddress);
         });
 
-        it('should throw when maker does not own the token they are exchanging', async () => {
+        it('should throw when maker does not own the token with id makerTokenId', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x5050505050505050505050505050505050505050505050505050505050505050');
             const takerTokenId = new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090');
@@ -1007,7 +1009,7 @@ describe('Exchange', () => {
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
 
-        it('should throw when taker does not own the token they are exchanging', async () => {
+        it('should throw when taker does not own the token with id takerTokenId', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
             const takerTokenId = new BigNumber('0x2020202020202020202020202020202020202020202020202020202020202020');
@@ -1031,14 +1033,14 @@ describe('Exchange', () => {
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
 
-        it('should throw when maker amount is not 1', async () => {
+        it('should throw when makerTokenAmount is greater than 1', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
             const takerTokenId = new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090');
             signedOrder = orderFactory.newSignedOrder({
                 makerTokenAddress: ck.address,
                 takerTokenAddress: ck.address,
-                makerTokenAmount: new BigNumber(500),
+                makerTokenAmount: new BigNumber(2),
                 takerTokenAmount: new BigNumber(1),
                 makerAssetProxyData: encodeERC721ProxyMetadata(ck.address, makerTokenId),
                 takerAssetProxyData: encodeERC721ProxyMetadata(ck.address, takerTokenId),
@@ -1055,7 +1057,7 @@ describe('Exchange', () => {
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
 
-        it('should throw when taker amount is not 1', async () => {
+        it('should throw when takerTokenAmount is greater than 1', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
             const takerTokenId = new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090');
