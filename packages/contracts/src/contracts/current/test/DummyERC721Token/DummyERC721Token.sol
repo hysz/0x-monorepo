@@ -17,7 +17,7 @@
 */
 
 pragma solidity ^0.4.21;
-import "/token/ERC721/ERC721Token.sol";
+import "/zeppelin/token/ERC721/ERC721Token.sol";
 import "../../utils/Ownable/Ownable.sol";
 
 contract DummyERC721Token is

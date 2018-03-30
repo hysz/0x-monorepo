@@ -16,8 +16,7 @@
         "test:coverage": "SOLIDITY_COVERAGE=true run-s build run_mocha coverage:report:text coverage:report:lcov",
         "run_mocha": "mocha 'lib/test/**/*.js' --timeout 100000 --bail --exit",
         "compile:comment": "Yarn workspaces do not link binaries correctly so we need to reference them directly https://github.com/yarnpkg/yarn/issues/3846",
-        "compile_zep": "node ../deployer/lib/src/cli.js compile --contracts ${npm_package_config_contracts} --contracts-dir ../../node_modules/zeppelin-solidity/contracts --artifacts-dir src/artifacts",
-        "compile": "node ../deployer/lib/src/cli.js compile --contracts ${npm_package_config_contracts} --contracts-dir src/contracts ../../node_modules/zeppelin-solidity/contracts --artifacts-dir src/artifacts",
+        "compile": "node ../deployer/lib/src/cli.js compile --contracts ${npm_package_config_contracts} --contracts-dir ${npm_package_config_dirs} --artifacts-dir src/artifacts",
         "clean": "shx rm -rf ./lib",
         "generate_contract_wrappers": "node ../abi-gen/lib/index.js --abis ${npm_package_config_abis} --template ../contract_templates/contract.handlebars --partials '../contract_templates/partials/**/*.handlebars' --output src/contract_wrappers/generated --backend ethers && prettier --write 'src/contract_wrappers/generated/**.ts'",
         "migrate": "yarn build && yarn compile_zep && yarn compile && node ./lib/migrations/index.js",
@@ -28,9 +27,9 @@
         "test:circleci": "yarn test:coverage"
     },
     "config": {
-        "contracts": "/current/protocol/Exchange/Exchange,/current/test/DummyToken/DummyToken,/current/tokens/ZRXToken/ZRXToken,/current/tokens/Token/Token,/current/tokens/WETH9/WETH9,/current/protocol/TokenTransferProxy/TokenTransferProxy,/current/multisig/MultiSigWallet/MultiSigWallet,/current/multisig/MultiSigWalletWithTimeLock/MultiSigWalletWithTimeLock,/current/multisig/MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress/MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress,/current/test/MaliciousToken/MaliciousToken,/current/protocol/TokenRegistry/TokenRegistry,/current/protocol/AssetTransferProxy/AssetTransferProxy,/current/protocol/AssetTransferProxy/proxies/ERC20TransferProxy_v1,/current/protocol/AssetTransferProxy/proxies/ERC20TransferProxy,/current/protocol/AssetTransferProxy/proxies/ERC721TransferProxy,/current/test/DummyERC721Token/DummyERC721Token",
+        "dirs": "0x:src/contracts,zeppelin:../../node_modules/zeppelin-solidity/contracts",
+        "contracts": "0x:Exchange,0x:DummyToken,0x:ZRXToken,0x:Token,0x:WETH9,0x:TokenTransferProxy,0x:MultiSigWallet,0x:MultiSigWalletWithTimeLock,0x:MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress,0x:MaliciousToken,0x:TokenRegistry,0x:AssetTransferProxy,0x:ERC20TransferProxy_v1,0x:ERC20TransferProxy,0x:ERC721TransferProxy,0x:DummyERC721Token",
         "abis": "src/artifacts/@(DummyToken|TokenTransferProxy|Exchange|TokenRegistry|MultiSigWallet|MultiSigWalletWithTimeLock|MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress|TokenRegistry|ZRXToken|Arbitrage|EtherDelta|AccountLevels|AssetTransferProxy|ERC20TransferProxy_v1|ERC20TransferProxy|ERC721TransferProxy|DummyERC721Token).json"
-
     },
     "repository": {
         "type": "git",

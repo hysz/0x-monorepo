@@ -21,6 +21,7 @@ import {
     ContractSpecificSourceData,
     AbiDefinition,
     FunctionList,
+    ContractNames,
 } from './utils/types';
 import { utils } from './utils/utils';
 
@@ -29,6 +30,7 @@ const SOLIDITY_VERSION_REGEX = /(?:solidity\s\^?)(\d+\.\d+\.\d+)/;
 const SOLIDITY_FILE_EXTENSION_REGEX = /(.*\.sol)/;
 const IMPORT_REGEX = /(import\s)/;
 const DEPENDENCY_PATH_REGEX = /"([^"]+)"/; // Source: https://github.com/BlockChainCompany/soljitsu/blob/master/lib/shared.js
+const CONTRACT_DECLARATION_REGEX = /(\ncontract\s)/;
 
 export class Compiler {
     private _contractsDir: string;
@@ -39,6 +41,7 @@ export class Compiler {
     private _solcErrors: Set<string> = new Set();
     private _specifiedContracts: Set<string> = new Set();
     private _contractSourceData: ContractSourceData = {};
+    private _contractNames: ContractNames = {};
     /**
      * Recursively retrieves Solidity source code from directory.
      * @param  dirPath Directory to search.
@@ -170,29 +173,46 @@ export class Compiler {
      */
     public async compileAllAsync(): Promise<void> {
         await this._createArtifactsDirIfDoesNotExistAsync();
-        this._contractSources = await Compiler._getContractSourcesAsync(this._contractsDir, this._contractsDir);
-        _.forIn(this._contractSources, (source, fileName) => {
-            console.log(fileName);
-            this._contractSourceData[fileName] = Compiler._getContractSpecificSourceData(fileName, source);
-        });
-
-        let friends = await Compiler._getContractSourcesAsync("/Users/greg/dev/greg-0x-monorepo/node_modules/zeppelin-solidity/contracts", "/Users/greg/dev/greg-0x-monorepo/node_modules/zeppelin-solidity/contracts");
-        _.forIn(friends, (source, fileName) => {
-            console.log(fileName);
-            if(! _.isUndefined(this._contractSources[fileName])) {
-                throw new Error("We already have a file named: " + fileName + "(" + this._contractSources[fileName] + ")");
+        const namespacedDirectories: string[] = this._contractsDir.split(",");
+        this._contractSources = {};
+        for(let i = 0; i < namespacedDirectories.length; ++i) {
+            const namespacedDirectoryComponents = namespacedDirectories[i].split(":");
+            let namespace:string = "";
+            let directory:string = "";
+            if(namespacedDirectoryComponents.length == 1) {
+                directory = namespacedDirectoryComponents[0];
+            } else if(namespacedDirectoryComponents.length == 2) {
+                namespace = namespacedDirectoryComponents[0];
+                directory = namespacedDirectoryComponents[1];
+            } else {
+                throw new Error("Unable to parse contracts directory: '" + namespacedDirectories[i] + "'");
             }
-            this._contractSources[fileName] = source;
-            this._contractSourceData[fileName] = Compiler._getContractSpecificSourceData(fileName, source);
-        });
+
+            let friends = await Compiler._getContractSourcesAsync(directory, directory);
+            _.forIn(friends, (source, fileName) => {
+                const id:string = "/" + namespace + fileName;
+                this._contractSources[id] = source;
+                this._contractSourceData[id] = Compiler._getContractSpecificSourceData(id, source);
+
+                const contractName = path.basename(fileName, constants.SOLIDITY_FILE_EXTENSION);
+                const namespacedContractName = namespace + ":" + contractName;
+                console.log("GN: " + namespacedContractName);
+                this._contractNames[namespacedContractName] = id;
+            });
+        }
 
         const fileNames = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
             ? _.keys(this._contractSources)
             : Array.from(this._specifiedContracts.values());
         _.forEach(fileNames, fileName => {
-            this._setSourceTreeHash(fileName);
+            console.log("FN: " + fileName);
+            console.log("FN2: " + this._contractNames[fileName]);
+            //const id = this._contractNames[fileName];
+            //console.log("FN3: " + this._contractSources[id]);
+            //console.log("FN4: " + this._contractSourceData[id]);
+            this._setSourceTreeHash(this._contractNames[fileName]);
         });
-        await Promise.all(_.map(fileNames, async fileName => this._compileContractAsync(fileName)));
+        await Promise.all(_.map(fileNames, async fileName => this._compileContractAsync(this._contractNames[fileName])));
         this._solcErrors.forEach(errMsg => {
             logUtils.log(errMsg);
         });
