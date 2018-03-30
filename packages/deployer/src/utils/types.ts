@@ -18,15 +18,6 @@ export interface ContractNetworks {
     [key: number]: ContractNetworkData;
 }
 
-export interface AbiDefinition {
-    name: string,
-    type: string,
-}
-
-export interface ContractAbi {
-    [key: number]: AbiDefinition;
-}
-
 export interface ContractDirectory {
     path: string,
     namespace: string,
@@ -92,7 +83,7 @@ export interface ContractSources {
     [key: string]: string;
 }
 
-export interface ContractNames {
+export interface ContractIds {
     [key: string]: string;
 }
 

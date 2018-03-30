@@ -20,7 +20,7 @@ import {
     ContractSources,
     ContractSpecificSourceData,
     FunctionList,
-    ContractNames,
+    ContractIds,
     ContractDirectory,
 } from './utils/types';
 import { utils } from './utils/utils';
@@ -40,7 +40,7 @@ export class Compiler {
     private _solcErrors: Set<string> = new Set();
     private _specifiedContracts: Set<string> = new Set();
     private _contractSourceData: ContractSourceData = {};
-    private _contractIds: ContractNames = {};
+    private _contractIds: ContractIds = {};
 
     /**
     * Generates a system-wide unique identifier for the source file.
@@ -80,7 +80,11 @@ export class Compiler {
     * @return sourceFileId A system-wide unique identifier for the source file.
     */
     private static _constructContractId(directoryNamespace: string, sourceFilePath: string): string {
-        return directoryNamespace + ":" + path.basename(sourceFilePath, constants.SOLIDITY_FILE_EXTENSION);
+        let namespacePrefix:string = "";
+        if(directoryNamespace != "") {
+            namespacePrefix = directoryNamespace + ":";
+        }
+        return namespacePrefix + path.basename(sourceFilePath, constants.SOLIDITY_FILE_EXTENSION);
     }
 
     /**
