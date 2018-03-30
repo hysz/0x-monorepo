@@ -7,7 +7,7 @@ import * as yargs from 'yargs';
 
 import { commands } from './commands';
 import { constants } from './utils/constants';
-import { CliOptions, CompilerOptions, DeployerOptions } from './utils/types';
+import { CliOptions, CompilerOptions, DeployerOptions, ContractDirectory } from './utils/types';
 
 const DEFAULT_OPTIMIZER_ENABLED = false;
 const DEFAULT_CONTRACTS_DIR = path.resolve('src/contracts');
@@ -23,7 +23,7 @@ const DEFAULT_CONTRACTS_LIST = '*';
  */
 async function onCompileCommand(argv: CliOptions): Promise<void> {
     const opts: CompilerOptions = {
-        contractsDir: argv.contractsDir,
+        contractsDir: getContractDirectoriesFromList(argv.contractsDir),
         networkId: argv.networkId,
         optimizerEnabled: argv.shouldOptimize ? 1 : 0,
         artifactsDir: argv.artifactsDir,
@@ -41,7 +41,7 @@ async function onDeployCommand(argv: CliOptions): Promise<void> {
     const web3Wrapper = new Web3Wrapper(web3Provider);
     const networkId = await web3Wrapper.getNetworkIdAsync();
     const compilerOpts: CompilerOptions = {
-        contractsDir: argv.contractsDir,
+        contractsDir: getContractDirectoriesFromList(argv.contractsDir),
         networkId,
         optimizerEnabled: argv.shouldOptimize ? 1 : 0,
         artifactsDir: argv.artifactsDir,
@@ -62,6 +62,32 @@ async function onDeployCommand(argv: CliOptions): Promise<void> {
     const deployerArgsString = argv.args;
     const deployerArgs = deployerArgsString.split(',');
     await commands.deployAsync(argv.contract, deployerArgs, deployerOpts);
+}
+/**
+ * Creates a set of contracts to compile.
+ * @param contractDirectoriesList Comma separated list of contract directories
+ * @return Set of contract directories
+ */
+function getContractDirectoriesFromList(contractDirectoriesList: string): Set<ContractDirectory> {
+    const directories = new Set();
+    const namespacedDirectories: string[] = contractDirectoriesList.split(",");
+
+    for(let i = 0; i < namespacedDirectories.length; ++i) {
+        let directory: ContractDirectory = {namespace: "", path: ""};
+        const directoryComponents = namespacedDirectories[i].split(":");
+        if(directoryComponents.length == 1) {
+            directory.namespace = "";
+            directory.path = directoryComponents[0];
+        } else if(directoryComponents.length == 2) {
+            directory.namespace = directoryComponents[0];
+            directory.path = directoryComponents[1];
+        } else {
+            throw new Error("Unable to parse contracts directory: '" + namespacedDirectories[i] + "'");
+        }
+        directories.add(directory);
+    }
+
+    return directories;
 }
 /**
  * Creates a set of contracts to compile.

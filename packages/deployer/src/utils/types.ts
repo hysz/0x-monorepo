@@ -27,6 +27,11 @@ export interface ContractAbi {
     [key: number]: AbiDefinition;
 }
 
+export interface ContractDirectory {
+    path: string,
+    namespace: string,
+}
+
 export interface ContractNetworkData {
     solc_version: string;
     optimizer_enabled: number;
@@ -60,7 +65,7 @@ export interface CliOptions extends yargs.Arguments {
 }
 
 export interface CompilerOptions {
-    contractsDir: string;
+    contractsDir: Set<ContractDirectory>;
     networkId: number;
     optimizerEnabled: number;
     artifactsDir: string;
