@@ -4,18 +4,26 @@ import 'mocha';
 import { Compiler } from '../src/compiler';
 import { Deployer } from '../src/deployer';
 import { fsWrapper } from '../src/utils/fs_wrapper';
-import { CompilerOptions, ContractArtifact, ContractNetworkData, DoneCallback } from '../src/utils/types';
+import {
+    CompilerOptions,
+    ContractArtifact,
+    ContractNetworkData,
+    DoneCallback,
+    ContractDirectory,
+    } from '../src/utils/types';
 
 import { constructor_args, exchange_binary } from './fixtures/exchange_bin';
 import { constants } from './util/constants';
 
 const expect = chai.expect;
 const artifactsDir = `${__dirname}/fixtures/artifacts`;
-const contractsDir = `${__dirname}/fixtures/contracts`;
+const contractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts`, namespace: ""};
+let contractDirs:Set<ContractDirectory> = new Set();
+contractDirs.add(contractDir);
 const exchangeArtifactPath = `${artifactsDir}/Exchange.json`;
 const compilerOpts: CompilerOptions = {
     artifactsDir,
-    contractsDir,
+    contractDirs: contractDirs,
     networkId: constants.networkId,
     optimizerEnabled: constants.optimizerEnabled,
     specifiedContracts: new Set(constants.specifiedContracts),
