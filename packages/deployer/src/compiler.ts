@@ -19,7 +19,6 @@ import {
     ContractSourceData,
     ContractSources,
     ContractSpecificSourceData,
-    AbiDefinition,
     FunctionList,
     ContractNames,
 } from './utils/types';
@@ -30,7 +29,6 @@ const SOLIDITY_VERSION_REGEX = /(?:solidity\s\^?)(\d+\.\d+\.\d+)/;
 const SOLIDITY_FILE_EXTENSION_REGEX = /(.*\.sol)/;
 const IMPORT_REGEX = /(import\s)/;
 const DEPENDENCY_PATH_REGEX = /"([^"]+)"/; // Source: https://github.com/BlockChainCompany/soljitsu/blob/master/lib/shared.js
-const CONTRACT_DECLARATION_REGEX = /(\ncontract\s)/;
 
 export class Compiler {
     private _contractsDir: string;
@@ -42,12 +40,41 @@ export class Compiler {
     private _specifiedContracts: Set<string> = new Set();
     private _contractSourceData: ContractSourceData = {};
     private _contractNames: ContractNames = {};
+
+    /**
+    * Generates a system-wide unique identifier for the source file.
+    * @param sourceFilePath Path to a source file, relative to contractBaseDir
+    * @param contractBaseDir Base contracts directory of search tree.
+    * @return sourceFileId A system-wide unique identifier for the source file.
+    */
+    private static _constructSourceFileId(sourceFilePath: string, contractNamespace: string): string {
+        return "/" + contractNamespace + "/" + sourceFilePath.replace(/^\/+/g, '');
+    }
+
+    /**
+    * Returns File Id
+    * @param dependencyFilePath Path from a sourceFile to a dependency.
+    * @param  contractBaseDir Base contracts directory of search tree.
+    * @return sourceFileId A system-wide unique identifier for the source file.
+    */
+    private static _constructDependencyFileId(dependencyFilePath: string, sourceFilePath: string): string {
+        if(dependencyFilePath.substr(0,1) == '/') {
+            // Path of the form /namespace/path/to/xyz.sol
+            return dependencyFilePath;
+        } else {
+            // Dependency is relative to the source file: ./dependency.sol, ../../some/path/dependency.sol, etc.
+            // Join the two paths to construct a valid sourec file id: /namespace/path/to/dependency.sol
+            return path.join(path.dirname(sourceFilePath), dependencyPath);
+        }
+    }
+
     /**
      * Recursively retrieves Solidity source code from directory.
      * @param  dirPath Directory to search.
-     * @return Mapping of contract fileName to contract source.
+     * @param  contractBaseDir Base contracts directory of search tree.
+     * @return Mapping of sourceFilePath to the contract source.
      */
-    private static async _getContractSourcesAsync(dirPath: string, baseDirPath: string): Promise<ContractSources> {
+    private static async _getContractSourcesAsync(dirPath: string, contractBaseDir: string): Promise<ContractSources> {
         let dirContents: string[] = [];
         try {
             dirContents = await fsWrapper.readdirAsync(dirPath);
@@ -63,16 +90,15 @@ export class Compiler {
                         encoding: 'utf8',
                     };
                     const source = await fsWrapper.readFileAsync(contentPath, opts);
-                    const relativePath = contentPath.substr(baseDirPath.length);
-                    console.log("Tracking " + relativePath);
-                    sources[relativePath] = source;
-                    logUtils.log(`Reading ${fileName} source...`);
+                    const sourceFilePath = contentPath.substr(contractBaseDir.length);
+                    sources[sourceFilePath] = source;
+                    logUtils.log(`Reading ${sourceFilePath} source...`);
                 } catch (err) {
                     logUtils.log(`Could not find file at ${contentPath}`);
                 }
             } else {
                 try {
-                    const nestedSources = await Compiler._getContractSourcesAsync(contentPath, baseDirPath);
+                    const nestedSources = await Compiler._getContractSourcesAsync(contentPath, contractBaseDir);
                     sources = {
                         ...sources,
                         ...nestedSources,
@@ -84,13 +110,14 @@ export class Compiler {
         }
         return sources;
     }
+
     /**
      * Gets contract dependendencies and keccak256 hash from source.
+     * @param sourceFilePath Path to a source file, relative to contractBaseDir
      * @param source Source code of contract.
      * @return Object with contract dependencies and keccak256 hash of source.
      */
-    private static _getContractSpecificSourceData(sourceFileName: string, source: string): ContractSpecificSourceData {
-        console.log("HYSEN EYO");
+    private static _getContractSpecificSourceData(sourceFilePath: string, source: string): ContractSpecificSourceData {
         const dependencies: string[] = [];
         const sourceHash = ethUtil.sha3(source);
         const solcVersion = Compiler._parseSolidityVersion(source);
@@ -105,9 +132,8 @@ export class Compiler {
                 const dependencyMatch = line.match(DEPENDENCY_PATH_REGEX);
                 if (!_.isNull(dependencyMatch)) {
                     const dependencyPath = dependencyMatch[1];
-                    const fileName = dependencyPath.substr(0,1) == '/' ? dependencyPath : path.join(path.dirname(sourceFileName), dependencyPath);
-                    console.log("HYSEN\n" + sourceFileName + "\n" + dependencyPath + "\n" +  fileName);
-                    contractSpecificSourceData.dependencies.push(fileName);
+                    const dependencyId = this._constructDependencyFileId(dependencyPath, sourceFilePath);
+                    contractSpecificSourceData.dependencies.push(dependencyId);
                 }
             }
         });
