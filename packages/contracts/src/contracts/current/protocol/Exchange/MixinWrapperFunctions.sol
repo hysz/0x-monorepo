@@ -22,16 +22,12 @@ pragma experimental ABIEncoderV2;
 import "./mixins/MExchangeCore.sol";
 import "../../utils/SafeMath/SafeMath.sol";
 
-
 /// @dev Consumes MExchangeCore
 contract MixinWrapperFunctions is
     MExchangeCore,
     SafeMath
 {
 
-    event LogGregsss(
-        bytes32 value
-    );
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
     /// @param signature Maker's signature of the order.

@@ -25,7 +25,6 @@ export class OrderFactory {
             ...this._defaultOrderParams,
             ...customOrderParams,
         } as any) as UnsignedOrder;
-
         const orderHashBuff = orderUtils.getOrderHashBuff(order);
         const signature = signingUtils.signMessage(orderHashBuff, this._privateKey, signatureType);
         const signedOrder = {

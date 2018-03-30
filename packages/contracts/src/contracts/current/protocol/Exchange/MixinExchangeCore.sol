@@ -79,12 +79,6 @@ contract MixinExchangeCore is
     * Core exchange functions
     */
 
-    event LogGregs(
-        bytes makerData,
-        bytes takerData,
-        bytes32 orderHash
-        );
-
     /// @dev Fills the input order.
     /// @param order Order struct containing order specifications.
     /// @param takerTokenFillAmount Desired amount of takerToken to fill.
