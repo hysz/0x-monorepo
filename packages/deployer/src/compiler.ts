@@ -49,7 +49,11 @@ export class Compiler {
     * @return sourceFileId A system-wide unique identifier for the source file.
     */
     private static _constructSourceFileId(directoryNamespace: string, sourceFilePath: string): string {
-        return "/" + directoryNamespace + "/" + sourceFilePath.replace(/^\/+/g, '');
+        let namespacePrefix:string = "";
+        if(directoryNamespace != "") {
+            namespacePrefix = "/" + directoryNamespace;
+        }
+        return namespacePrefix + "/" + sourceFilePath.replace(/^\/+/g, '');
     }
 
     /**
