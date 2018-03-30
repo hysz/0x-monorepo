@@ -231,18 +231,13 @@ export class Compiler {
             });
         }
 
-        const fileNames = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
-            ? _.keys(this._contractSources)
+        const contractIds = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
+            ? _.keys(this._contractIds)
             : Array.from(this._specifiedContracts.values());
-        _.forEach(fileNames, fileName => {
-            console.log("FN: " + fileName);
-            console.log("FN2: " + this._contractIds[fileName]);
-            //const id = this._contractIds[fileName];
-            //console.log("FN3: " + this._contractSources[id]);
-            //console.log("FN4: " + this._contractSourceData[id]);
-            this._setSourceTreeHash(this._contractIds[fileName]);
+        _.forEach(contractIds, contractId => {
+            this._setSourceTreeHash(this._contractIds[contractId]);
         });
-        await Promise.all(_.map(fileNames, async fileName => this._compileContractAsync(this._contractIds[fileName])));
+        await Promise.all(_.map(contractIds, async contractId => this._compileContractAsync(this._contractIds[contractId])));
         this._solcErrors.forEach(errMsg => {
             logUtils.log(errMsg);
         });
