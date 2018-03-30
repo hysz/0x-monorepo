@@ -31,8 +31,7 @@ export const crypto = {
                 argTypes.push('address');
             } else if (_.isString(arg)) {
                 argTypes.push('string');
-            } else if(_.isArrayLike(arg) || arg.length > 32) {
-                console.log("bytes: " + arg);
+            } else if (arg instanceof Buffer) {
                 argTypes.push('bytes');
             } else if (_.isBoolean(arg)) {
                 argTypes.push('bool');

@@ -1030,6 +1030,7 @@ describe('Exchange', () => {
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
+
         it('should throw when maker amount is not 1', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
@@ -1053,6 +1054,7 @@ describe('Exchange', () => {
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
+
         it('should throw when taker amount is not 1', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
@@ -1076,6 +1078,7 @@ describe('Exchange', () => {
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
+
         it('should throw on partial fill', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
@@ -1099,6 +1102,7 @@ describe('Exchange', () => {
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             return expect(exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount })).to.be.rejectedWith(constants.REVERT);
         });
+
         it('should successfully fill order when makerToken is ERC721 and takerToken is ERC20', async () => {
             // Construct Exchange parameters
             const makerTokenId = new BigNumber('0x1010101010101010101010101010101010101010101010101010101010101010');
@@ -1116,6 +1120,7 @@ describe('Exchange', () => {
             expect(initialOwnerMakerToken).to.be.bignumber.equal(makerAddress);
 
             // Call Exchange
+            balances = await dmyBalances.getAsync();
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             await exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount });
 
@@ -1141,6 +1146,7 @@ describe('Exchange', () => {
                 balances[feeRecipientAddress][zrx.address].add(signedOrder.makerFeeAmount.add(signedOrder.takerFeeAmount)),
             );
         });
+
         it('should successfully fill order when makerToken is ERC20 and takerToken is ERC721', async () => {
             // Construct Exchange parameters
             const takerTokenId = new BigNumber('0x9090909090909090909090909090909090909090909090909090909090909090');
@@ -1158,6 +1164,7 @@ describe('Exchange', () => {
             expect(initialOwnerTakerToken).to.be.bignumber.equal(takerAddress);
 
             // Call Exchange
+            balances = await dmyBalances.getAsync();
             const takerTokenFillAmount = signedOrder.takerTokenAmount;
             await exWrapper.fillOrderAsync(signedOrder, takerAddress, { takerTokenFillAmount });
 
