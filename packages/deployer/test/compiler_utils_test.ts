@@ -47,28 +47,28 @@ describe('Compiler utils', () => {
     });
     describe('#parseDependencies', () => {
         it('correctly parses Exchange dependencies', async () => {
-            const exchangeSource = await fsWrapper.readFileAsync(`${__dirname}/fixtures/contracts/Exchange.sol`, {
+            const exchangeSource = await fsWrapper.readFileAsync(`${__dirname}/fixtures/contracts/main/Exchange.sol`, {
                 encoding: 'utf8',
             });
-            expect(parseDependencies(exchangeSource)).to.be.deep.equal([
-                'TokenTransferProxy.sol',
-                'Token.sol',
-                'SafeMath.sol',
+            expect(parseDependencies(exchangeSource, "/main/Exchange.sol")).to.be.deep.equal([
+                '/main/TokenTransferProxy.sol',
+                '/base/Token.sol',
+                '/base/SafeMath.sol',
             ]);
         });
         it('correctly parses TokenTransferProxy dependencies', async () => {
             const exchangeSource = await fsWrapper.readFileAsync(
-                `${__dirname}/fixtures/contracts/TokenTransferProxy.sol`,
+                `${__dirname}/fixtures/contracts/main/TokenTransferProxy.sol`,
                 {
                     encoding: 'utf8',
                 },
             );
-            expect(parseDependencies(exchangeSource)).to.be.deep.equal(['Token.sol', 'Ownable.sol']);
+            expect(parseDependencies(exchangeSource, "/main/TokenTransferProxy.sol")).to.be.deep.equal(['/base/Token.sol', '/base/Ownable.sol']);
         });
         // TODO: For now that doesn't work. This will work after we switch to a grammar-based parser
         it.skip('correctly parses commented out dependencies', async () => {
             const contractWithCommentedOutDependencies = `// import "./TokenTransferProxy.sol";`;
-            expect(parseDependencies(contractWithCommentedOutDependencies)).to.be.deep.equal([]);
+            expect(parseDependencies(contractWithCommentedOutDependencies, "")).to.be.deep.equal([]);
         });
     });
 });
