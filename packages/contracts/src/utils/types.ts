@@ -1,5 +1,5 @@
+import { AbiDefinition, ContractAbi } from '@0xproject/types';
 import { BigNumber } from '@0xproject/utils';
-import * as Web3 from 'web3';
 
 export interface BalancesByOwner {
     [ownerAddress: string]: {
@@ -25,7 +25,10 @@ export interface MarketFillOrders {
 
 export interface BatchCancelOrders {
     orders: OrderStruct[];
-    takerTokenCancelAmounts: BigNumber[];
+}
+
+export interface CancelOrdersBefore {
+    salt: BigNumber;
 }
 
 export interface DefaultOrderParams {
@@ -42,7 +45,7 @@ export interface DefaultOrderParams {
 
 export interface TransactionDataParams {
     name: string;
-    abi: Web3.AbiDefinition[];
+    abi: AbiDefinition[];
     args: any[];
 }
 
@@ -72,7 +75,8 @@ export interface TokenInfoByNetwork {
 
 export enum ExchangeContractErrs {
     ERROR_ORDER_EXPIRED,
-    ERROR_ORDER_FULLY_FILLED_OR_CANCELLED,
+    ERROR_ORDER_FULLY_FILLED,
+    ERROR_ORDER_CANCELLED,
     ERROR_ROUNDING_ERROR_TOO_LARGE,
     ERROR_INSUFFICIENT_BALANCE_OR_ALLOWANCE,
 }
@@ -96,7 +100,7 @@ export interface Artifact {
     contract_name: ContractName;
     networks: {
         [networkId: number]: {
-            abi: Web3.ContractAbi;
+            abi: ContractAbi;
             solc_version: string;
             keccak256: string;
             optimizer_enabled: number;

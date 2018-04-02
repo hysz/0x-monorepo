@@ -601,7 +601,7 @@ describe('Exchange', () => {
             expect(res.logs).to.have.length(1);
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogErrorContractEventArgs>;
             const errCode = log.args.errorId;
-            expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_FULLY_FILLED_OR_CANCELLED);
+            expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_FULLY_FILLED);
         });
     });
 
@@ -631,16 +631,6 @@ describe('Exchange', () => {
             return expect(exWrapper.cancelOrderAsync(signedOrder, makerAddress)).to.be.rejectedWith(constants.REVERT);
         });
 
-        it('should throw if takerTokenCancelAmount is 0', async () => {
-            signedOrder = orderFactory.newSignedOrder();
-
-            return expect(
-                exWrapper.cancelOrderAsync(signedOrder, makerAddress, {
-                    takerTokenCancelAmount: new BigNumber(0),
-                }),
-            ).to.be.rejectedWith(constants.REVERT);
-        });
-
         it('should be able to cancel a full order', async () => {
             await exWrapper.cancelOrderAsync(signedOrder, makerAddress);
             await exWrapper.fillOrderAsync(signedOrder, takerAddress, {
@@ -651,85 +641,32 @@ describe('Exchange', () => {
             expect(newBalances).to.be.deep.equal(balances);
         });
 
-        it('should be able to cancel part of an order', async () => {
-            const takerTokenCancelAmount = signedOrder.takerTokenAmount.div(2);
-            await exWrapper.cancelOrderAsync(signedOrder, makerAddress, {
-                takerTokenCancelAmount,
-            });
-
-            const res = await exWrapper.fillOrderAsync(signedOrder, takerAddress, {
-                takerTokenFillAmount: signedOrder.takerTokenAmount,
-            });
-            const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogFillContractEventArgs>;
-            expect(log.args.takerTokenFilledAmount).to.be.bignumber.equal(
-                signedOrder.takerTokenAmount.minus(takerTokenCancelAmount),
-            );
-
-            const newBalances = await dmyBalances.getAsync();
-            const cancelMakerTokenAmount = takerTokenCancelAmount
-                .times(signedOrder.makerTokenAmount)
-                .dividedToIntegerBy(signedOrder.takerTokenAmount);
-            const makerFeePaid = signedOrder.makerFeeAmount
-                .times(cancelMakerTokenAmount)
-                .dividedToIntegerBy(signedOrder.makerTokenAmount);
-            const takerFeePaid = signedOrder.takerFeeAmount
-                .times(cancelMakerTokenAmount)
-                .dividedToIntegerBy(signedOrder.makerTokenAmount);
-            expect(newBalances[makerAddress][signedOrder.makerTokenAddress]).to.be.bignumber.equal(
-                balances[makerAddress][signedOrder.makerTokenAddress].minus(cancelMakerTokenAmount),
-            );
-            expect(newBalances[makerAddress][signedOrder.takerTokenAddress]).to.be.bignumber.equal(
-                balances[makerAddress][signedOrder.takerTokenAddress].add(takerTokenCancelAmount),
-            );
-            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
-                balances[makerAddress][zrx.address].minus(makerFeePaid),
-            );
-            expect(newBalances[takerAddress][signedOrder.takerTokenAddress]).to.be.bignumber.equal(
-                balances[takerAddress][signedOrder.takerTokenAddress].minus(takerTokenCancelAmount),
-            );
-            expect(newBalances[takerAddress][signedOrder.makerTokenAddress]).to.be.bignumber.equal(
-                balances[takerAddress][signedOrder.makerTokenAddress].add(cancelMakerTokenAmount),
-            );
-            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
-                balances[takerAddress][zrx.address].minus(takerFeePaid),
-            );
-            expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
-                balances[feeRecipientAddress][zrx.address].add(makerFeePaid.add(takerFeePaid)),
-            );
-        });
-
         it('should log 1 event with correct arguments', async () => {
             const divisor = 2;
-            const res = await exWrapper.cancelOrderAsync(signedOrder, makerAddress, {
-                takerTokenCancelAmount: signedOrder.takerTokenAmount.div(divisor),
-            });
+            const res = await exWrapper.cancelOrderAsync(signedOrder, makerAddress);
             expect(res.logs).to.have.length(1);
 
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogCancelContractEventArgs>;
             const logArgs = log.args;
-            const expectedCancelledMakerTokenAmount = signedOrder.makerTokenAmount.div(divisor);
-            const expectedCancelledTakerTokenAmount = signedOrder.takerTokenAmount.div(divisor);
 
             expect(signedOrder.makerAddress).to.be.equal(logArgs.makerAddress);
             expect(signedOrder.feeRecipientAddress).to.be.equal(logArgs.feeRecipientAddress);
             expect(signedOrder.makerTokenAddress).to.be.equal(logArgs.makerTokenAddress);
             expect(signedOrder.takerTokenAddress).to.be.equal(logArgs.takerTokenAddress);
-            expect(expectedCancelledMakerTokenAmount).to.be.bignumber.equal(logArgs.makerTokenCancelledAmount);
-            expect(expectedCancelledTakerTokenAmount).to.be.bignumber.equal(logArgs.takerTokenCancelledAmount);
             expect(orderUtils.getOrderHashHex(signedOrder)).to.be.equal(logArgs.orderHash);
         });
 
-        it('should not log events if no value is cancelled', async () => {
+        it('should log an error if already cancelled', async () => {
             await exWrapper.cancelOrderAsync(signedOrder, makerAddress);
 
             const res = await exWrapper.cancelOrderAsync(signedOrder, makerAddress);
             expect(res.logs).to.have.length(1);
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogErrorContractEventArgs>;
             const errCode = log.args.errorId;
-            expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_FULLY_FILLED_OR_CANCELLED);
+            expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_CANCELLED);
         });
 
-        it('should not log events if order is expired', async () => {
+        it('should log error if order is expired', async () => {
             signedOrder = orderFactory.newSignedOrder({
                 expirationTimeSeconds: new BigNumber(Math.floor((Date.now() - 10000) / 1000)),
             });
@@ -739,6 +676,85 @@ describe('Exchange', () => {
             const log = logDecoder.decodeLogOrThrow(res.logs[0]) as LogWithDecodedArgs<LogErrorContractEventArgs>;
             const errCode = log.args.errorId;
             expect(errCode).to.be.equal(ExchangeContractErrs.ERROR_ORDER_EXPIRED);
+        });
+    });
+
+    describe('cancelOrdersUpTo', () => {
+        it('should fail to set makerEpoch less than current makerEpoch', async () => {
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+            const lesserMakerEpoch = new BigNumber(0);
+            return expect(exWrapper.cancelOrdersUpToAsync(lesserMakerEpoch, makerAddress)).to.be.rejectedWith(
+                constants.REVERT,
+            );
+        });
+
+        it('should fail to set makerEpoch equal to existing makerEpoch', async () => {
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+            return expect(exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress)).to.be.rejectedWith(
+                constants.REVERT,
+            );
+        });
+
+        it('should cancel only orders with a makerEpoch less than existing makerEpoch', async () => {
+            // Cancel all transactions with a makerEpoch less than 1
+            const makerEpoch = new BigNumber(1);
+            await exWrapper.cancelOrdersUpToAsync(makerEpoch, makerAddress);
+
+            // Create 3 orders with makerEpoch values: 0,1,2,3
+            // Since we cancelled with makerEpoch=1, orders with makerEpoch<=1 will not be processed
+            balances = await dmyBalances.getAsync();
+            const signedOrders = await Promise.all([
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(9), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(9), 18),
+                    salt: new BigNumber(0),
+                }),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(79), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(79), 18),
+                    salt: new BigNumber(1),
+                }),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(979), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(979), 18),
+                    salt: new BigNumber(2),
+                }),
+                orderFactory.newSignedOrder({
+                    makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(7979), 18),
+                    takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(7979), 18),
+                    salt: new BigNumber(3),
+                }),
+            ]);
+            await exWrapper.batchFillOrdersNoThrowAsync(signedOrders, takerAddress);
+
+            const newBalances = await dmyBalances.getAsync();
+            const fillMakerTokenAmount = signedOrders[2].makerTokenAmount.add(signedOrders[3].makerTokenAmount);
+            const fillTakerTokenAmount = signedOrders[2].takerTokenAmount.add(signedOrders[3].takerTokenAmount);
+            const makerFeeAmount = signedOrders[2].makerFeeAmount.add(signedOrders[3].makerFeeAmount);
+            const takerFeeAmount = signedOrders[2].takerFeeAmount.add(signedOrders[3].takerFeeAmount);
+            expect(newBalances[makerAddress][signedOrders[3].makerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrders[3].makerTokenAddress].minus(fillMakerTokenAmount),
+            );
+            expect(newBalances[makerAddress][signedOrders[3].takerTokenAddress]).to.be.bignumber.equal(
+                balances[makerAddress][signedOrders[3].takerTokenAddress].add(fillTakerTokenAmount),
+            );
+            expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[makerAddress][zrx.address].minus(makerFeeAmount),
+            );
+            expect(newBalances[takerAddress][signedOrders[3].takerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrders[3].takerTokenAddress].minus(fillTakerTokenAmount),
+            );
+            expect(newBalances[takerAddress][signedOrders[3].makerTokenAddress]).to.be.bignumber.equal(
+                balances[takerAddress][signedOrders[3].makerTokenAddress].add(fillMakerTokenAmount),
+            );
+            expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
+                balances[takerAddress][zrx.address].minus(takerFeeAmount),
+            );
+            expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
+                balances[feeRecipientAddress][zrx.address].add(makerFeeAmount.add(takerFeeAmount)),
+            );
         });
     });
 }); // tslint:disable-line:max-file-line-count

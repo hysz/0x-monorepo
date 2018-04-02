@@ -1,26 +1,30 @@
 import { schemas } from '@0xproject/json-schemas';
-import { BlockParamLiteral, DecodedLogArgs, LogWithDecodedArgs } from '@0xproject/types';
+import {
+    BlockParamLiteral,
+    DecodedLogArgs,
+    ECSignature,
+    LogEntry,
+    LogWithDecodedArgs,
+    Order,
+    SignedOrder,
+} from '@0xproject/types';
 import { AbiDecoder, BigNumber } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as _ from 'lodash';
-import * as Web3 from 'web3';
 
 import { artifacts } from '../artifacts';
 import {
     BlockRange,
-    ECSignature,
     EventCallback,
     ExchangeContractErrCodes,
     ExchangeContractErrs,
     IndexedFilterValues,
     MethodOpts,
-    Order,
     OrderAddresses,
     OrderCancellationRequest,
     OrderFillRequest,
     OrderTransactionOpts,
     OrderValues,
-    SignedOrder,
     ValidateOrderFillableOpts,
 } from '../types';
 import { assert } from '../utils/assert';
@@ -83,12 +87,11 @@ export class ExchangeWrapper extends ContractWrapper {
     constructor(
         web3Wrapper: Web3Wrapper,
         networkId: number,
-        abiDecoder: AbiDecoder,
         tokenWrapper: TokenWrapper,
         contractAddressIfExists?: string,
         zrxContractAddressIfExists?: string,
     ) {
-        super(web3Wrapper, networkId, abiDecoder);
+        super(web3Wrapper, networkId);
         this._tokenWrapper = tokenWrapper;
         this._orderValidationUtils = new OrderValidationUtils(this);
         this._contractAddressIfExists = contractAddressIfExists;
@@ -277,6 +280,9 @@ export class ExchangeWrapper extends ContractWrapper {
                     zrxTokenAddress,
                 );
                 filledTakerTokenAmount = filledTakerTokenAmount.plus(singleFilledTakerTokenAmount);
+                if (filledTakerTokenAmount.eq(fillTakerTokenAmount)) {
+                    break;
+                }
             }
         }
 
@@ -853,10 +859,10 @@ export class ExchangeWrapper extends ContractWrapper {
         return isRoundingError;
     }
     /**
-     * Checks if logs contain LogError, which is emmited by Exchange contract on transaction failure.
+     * Checks if logs contain LogError, which is emitted by Exchange contract on transaction failure.
      * @param   logs   Transaction logs as returned by `zeroEx.awaitTransactionMinedAsync`
      */
-    public throwLogErrorsAsErrors(logs: Array<LogWithDecodedArgs<DecodedLogArgs> | Web3.LogEntry>): void {
+    public throwLogErrorsAsErrors(logs: Array<LogWithDecodedArgs<DecodedLogArgs> | LogEntry>): void {
         const errLog = _.find(logs, {
             event: ExchangeEvents.LogError,
         });

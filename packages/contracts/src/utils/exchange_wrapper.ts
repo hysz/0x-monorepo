@@ -34,17 +34,9 @@ export class ExchangeWrapper {
         const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
         return tx;
     }
-    public async cancelOrderAsync(
-        signedOrder: SignedOrder,
-        from: string,
-        opts: { takerTokenCancelAmount?: BigNumber } = {},
-    ): Promise<TransactionReceiptWithDecodedLogs> {
-        const params = orderUtils.createCancel(signedOrder, opts.takerTokenCancelAmount);
-        const txHash = await this._exchange.cancelOrder.sendTransactionAsync(
-            params.order,
-            params.takerTokenCancelAmount,
-            { from },
-        );
+    public async cancelOrderAsync(signedOrder: SignedOrder, from: string): Promise<TransactionReceiptWithDecodedLogs> {
+        const params = orderUtils.createCancel(signedOrder);
+        const txHash = await this._exchange.cancelOrder.sendTransactionAsync(params.order, { from });
         const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
         return tx;
     }
@@ -156,17 +148,18 @@ export class ExchangeWrapper {
     public async batchCancelOrdersAsync(
         orders: SignedOrder[],
         from: string,
-        opts: { takerTokenCancelAmounts?: BigNumber[] } = {},
     ): Promise<TransactionReceiptWithDecodedLogs> {
-        const params = formatters.createBatchCancel(orders, opts.takerTokenCancelAmounts);
-        const txHash = await this._exchange.batchCancelOrders.sendTransactionAsync(
-            params.orders,
-            params.takerTokenCancelAmounts,
-            { from },
-        );
+        const params = formatters.createBatchCancel(orders);
+        const txHash = await this._exchange.batchCancelOrders.sendTransactionAsync(params.orders, { from });
         const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
         return tx;
     }
+    public async cancelOrdersUpToAsync(salt: BigNumber, from: string): Promise<TransactionReceiptWithDecodedLogs> {
+        const txHash = await this._exchange.cancelOrdersUpTo.sendTransactionAsync(salt, { from });
+        const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
+        return tx;
+    }
+
     public async getOrderHashAsync(signedOrder: SignedOrder): Promise<string> {
         const order = orderUtils.getOrderStruct(signedOrder);
         const orderHash = await this._exchange.getOrderHash.callAsync(order);
