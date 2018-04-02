@@ -17,9 +17,11 @@ import { constants } from './util/constants';
 
 const expect = chai.expect;
 const artifactsDir = `${__dirname}/fixtures/artifacts`;
-const contractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts`, namespace: ""};
+const mainContractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts/main`, namespace: ""};
+const baseContractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts/base`, namespace: "base"};
 let contractDirs:Set<ContractDirectory> = new Set();
-contractDirs.add(contractDir);
+contractDirs.add(mainContractDir);
+contractDirs.add(baseContractDir);
 const exchangeArtifactPath = `${artifactsDir}/Exchange.json`;
 const compilerOpts: CompilerOptions = {
     artifactsDir,
