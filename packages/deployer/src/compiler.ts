@@ -322,18 +322,31 @@ export class Compiler {
         const updated_at = Date.now();
 
         // There is no function overloading in typescript, so we must change the Typescript ABI interface.
-        // Overloaded function names are incremented as follows: functionName, functionName2, functioname3, ...
-        const functions:FunctionList = {};
+        // Overloaded function names are incremented as follows: functionName, functionName_2, functioname_3, ...
+        // If functionName_N already exists then compilation will fail.
+        const functionList:FunctionList = {};
         for(let i = 0; i < abi.length; ++i) {
             const type:string = abi[i].type;
-            if(type === "function") {
-                const name:string = (abi[i] as any).name;
-                if(name in functions) {
-                    functions[name]++;
-                    (abi[i] as any).name += "_" + functions[name];
-                } else {
-                    functions[name] = 1;
-                }
+            if(type !== "function") continue;
+
+            // Construct possible function names
+            const originalName:string = (abi[i] as any).name;
+            const overloadedName:string = (originalName in functionList) ? originalName+"_"+(++functionList[originalName]) : originalName;
+            const unoverloadedName:string = originalName.indexOf("_") > 0 ? originalName.substr(0, originalName.lastIndexOf("_")) : originalName;
+
+            // Fail if an overloaded function was renamed to a function that already exists
+            if((overloadedName != originalName && overloadedName in functionList) ||
+                (unoverloadedName != originalName && unoverloadedName in functionList))
+            {
+                throw new Error("Failed to rename overloaded function '" + unoverloadedName +  "' to '" + overloadedName + "' already exists.");
+            }
+
+            // Replace function name in ABI if overloaded
+            if(overloadedName != originalName) {
+                (abi[i] as any).name = overloadedName;
+                console.log("Renamed overloaded function '" + originalName + "' to '" + overloadedName + "'");
+            } else {
+                functionList[originalName] = 1;
             }
         }
 
