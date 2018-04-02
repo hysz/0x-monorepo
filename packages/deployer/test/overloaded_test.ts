@@ -1,3 +1,4 @@
+import { ContractAbi } from '@0xproject/types';
 import * as chai from 'chai';
 import chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
@@ -47,7 +48,7 @@ describe('#OverloadedFunctions', () => {
             specifiedContracts: specifiedContracts,
         };
         const compiler = new Compiler(compilerOpts);
-        await compiler.compileAllAsync();
+        await compiler.compileAsync();
 
         // Parse ABI
         const opts = {
@@ -55,7 +56,7 @@ describe('#OverloadedFunctions', () => {
         };
         const artifactString = await fsWrapper.readFileAsync(passingArtifactPath, opts);
         const artifact: ContractArtifact = JSON.parse(artifactString);
-        const abi: Web3.ContractAbi = (((artifact["networks"] as any)["0"] as any)["abi"] as any);
+        const abi: ContractAbi = (((artifact["networks"] as any)["0"] as any)["abi"] as any);
 
         // Assert test, test_2 and test_3 functions exist
         let testExists:boolean = false;
@@ -87,7 +88,7 @@ describe('#OverloadedFunctions', () => {
             specifiedContracts: specifiedContracts,
         };
         const compiler = new Compiler(compilerOpts);
-        await expect(compiler.compileAllAsync()).to.be.rejectedWith(Error);
+        await expect(compiler.compileAsync()).to.be.rejectedWith(Error);
 
     });
 
@@ -105,6 +106,6 @@ describe('#OverloadedFunctions', () => {
             specifiedContracts: specifiedContracts,
         };
         const compiler = new Compiler(compilerOpts);
-        await expect(compiler.compileAllAsync()).to.be.rejectedWith(Error);
+        await expect(compiler.compileAsync()).to.be.rejectedWith(Error);
     });
 });

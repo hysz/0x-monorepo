@@ -1,7 +1,6 @@
 declare module 'react-tooltip';
 declare module 'react-router-hash-link';
 declare module 'truffle-contract';
-declare module 'ethereumjs-util';
 declare module 'keccak';
 declare module 'whatwg-fetch';
 declare module 'react-html5video';
@@ -9,7 +8,6 @@ declare module 'web3-provider-engine/subproviders/filters';
 declare module 'thenby';
 declare module 'react-recaptcha';
 declare module 'react-document-title';
-declare module 'ethereumjs-tx';
 declare module 'react-ga';
 
 declare module '*.json' {
@@ -115,27 +113,16 @@ declare module 'web3-provider-engine/subproviders/subprovider' {
     export = Subprovider;
 }
 declare module 'web3-provider-engine/subproviders/rpc' {
-    import * as Web3 from 'web3';
+    import { JSONRPCRequestPayload } from '@0xproject/types';
     class RpcSubprovider {
         constructor(options: { rpcUrl: string });
         public handleRequest(
-            payload: Web3.JSONRPCRequestPayload,
+            payload: JSONRPCRequestPayload,
             next: () => void,
             end: (err: Error | null, data?: any) => void,
         ): void;
     }
     export = RpcSubprovider;
-}
-declare module 'web3-provider-engine' {
-    class Web3ProviderEngine {
-        public on(event: string, handler: () => void): void;
-        public send(payload: any): void;
-        public sendAsync(payload: any, callback: (error: any, response: any) => void): void;
-        public addProvider(provider: any): void;
-        public start(): void;
-        public stop(): void;
-    }
-    export = Web3ProviderEngine;
 }
 
 declare interface Artifact {
