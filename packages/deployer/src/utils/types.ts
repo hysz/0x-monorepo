@@ -87,7 +87,6 @@ export interface ContractIds {
     [key: string]: string;
 }
 
-
 export interface ContractSourceData {
     [key: string]: ContractSpecificSourceData;
 }
