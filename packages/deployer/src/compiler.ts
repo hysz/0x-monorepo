@@ -43,9 +43,9 @@ export class Compiler {
     private _contractIds: ContractIds = {};
 
     /**
-    * Generates a system-wide unique identifier for the source file.
-    * @param directoryNamespace Namespace of the source file's root contract directory
-    * @param sourceFilePath Path to a source file, relative to contractBaseDir
+    * Constructs a system-wide unique identifier for a source file.
+    * @param directoryNamespace Namespace of the source file's root contract directory.
+    * @param sourceFilePath Path to a source file, relative to contractBaseDir.
     * @return sourceFileId A system-wide unique identifier for the source file.
     */
     private static _constructSourceFileId(directoryNamespace: string, sourceFilePath: string): string {
@@ -57,14 +57,14 @@ export class Compiler {
     }
 
     /**
-    * Returns File Id
+    * Constructs a system-wide unique identifier for a dependency file.
     * @param dependencyFilePath Path from a sourceFile to a dependency.
     * @param  contractBaseDir Base contracts directory of search tree.
     * @return sourceFileId A system-wide unique identifier for the source file.
     */
     private static _constructDependencyFileId(dependencyFilePath: string, sourceFilePath: string): string {
         if(dependencyFilePath.substr(0,1) == '/') {
-            // Path of the form /namespace/path/to/xyz.sol
+            // Path of the form /namespace/path/to/dependency.sol
             return dependencyFilePath;
         } else {
             // Dependency is relative to the source file: ./dependency.sol, ../../some/path/dependency.sol, etc.
@@ -74,10 +74,10 @@ export class Compiler {
     }
 
     /**
-    * Generates a system-wide unique identifier for the source file.
-    * @param directoryNamespace Namespace of the source file's root contract directory
-    * @param sourceFilePath Path to a source file, relative to contractBaseDir
-    * @return sourceFileId A system-wide unique identifier for the source file.
+    * Constructs a system-wide unique identifier for a contract.
+    * @param directoryNamespace Namespace of the source file's root contract directory.
+    * @param sourceFilePath Path to a source file, relative to contractBaseDir.
+    * @return sourceFileId A system-wide unique identifier for contract.
     */
     private static _constructContractId(directoryNamespace: string, sourceFilePath: string): string {
         let namespacePrefix:string = "";
