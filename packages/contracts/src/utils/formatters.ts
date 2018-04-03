@@ -23,6 +23,8 @@ export const formatters = {
                 takerFeeAmount: signedOrder.takerFeeAmount,
                 expirationTimeSeconds: signedOrder.expirationTimeSeconds,
                 salt: signedOrder.salt,
+                makerAssetProxyData: signedOrder.makerAssetProxyData,
+                takerAssetProxyData: signedOrder.takerAssetProxyData,
             });
             batchFill.signatures.push(signedOrder.signature);
             if (takerTokenFillAmounts.length < signedOrders.length) {
@@ -50,6 +52,8 @@ export const formatters = {
                 takerFeeAmount: signedOrder.takerFeeAmount,
                 expirationTimeSeconds: signedOrder.expirationTimeSeconds,
                 salt: signedOrder.salt,
+                makerAssetProxyData: signedOrder.makerAssetProxyData,
+                takerAssetProxyData: signedOrder.takerAssetProxyData,
             });
             marketFillOrders.signatures.push(signedOrder.signature);
         });
@@ -72,6 +76,8 @@ export const formatters = {
                 takerFeeAmount: signedOrder.takerFeeAmount,
                 expirationTimeSeconds: signedOrder.expirationTimeSeconds,
                 salt: signedOrder.salt,
+                makerAssetProxyData: signedOrder.makerAssetProxyData,
+                takerAssetProxyData: signedOrder.takerAssetProxyData,
             });
         });
         return batchCancel;
