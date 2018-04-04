@@ -52,8 +52,9 @@ export function constructContractId(directoryNamespace: string, sourceFilePath: 
  * Overloaded function names are incremented as follows: functionName, functionName_2, functioname_3, ...
  * If functionName_N already exists then compilation will fail.
  * @param contractAbi Contract ABI
+ * @return Contract ABI with overloaded functions renamed.
  */
-export function renameOverloadedFunctionNames(contractAbi: ContractAbi) {
+export function renameOverloadedFunctions(contractAbi: ContractAbi): ContractAbi {
     // Collect list of function names in the contract ABI
     const functionNameList = _.map(contractAbi, abiItem => {
         const type = abiItem.type;
@@ -66,8 +67,9 @@ export function renameOverloadedFunctionNames(contractAbi: ContractAbi) {
     });
 
     // Rename overloaded functions
+    const outputContractAbi = _.cloneDeep(contractAbi);
     const functionNameToSeenCount: FunctionNameToSeenCount = {};
-    _.forEach(contractAbi, abiItem => {
+    _.forEach(outputContractAbi, abiItem => {
         const type = abiItem.type;
         if (type !== AbiType.Function) {
             return; // skips this abiItem
@@ -94,6 +96,8 @@ export function renameOverloadedFunctionNames(contractAbi: ContractAbi) {
             functionNameToSeenCount[originalName] = 1;
         }
     });
+
+    return outputContractAbi;
 }
 /**
  * Gets contract data on network or returns if an artifact does not exist.
