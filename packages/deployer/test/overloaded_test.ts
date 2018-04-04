@@ -60,17 +60,17 @@ describe('#OverloadedFunctions', () => {
         };
         const artifactString = await fsWrapper.readFileAsync(passingArtifactPath, opts);
         const artifact: ContractArtifact = JSON.parse(artifactString);
-        const abi: ContractAbi = artifact.networks[0].abi;
+        const abi = artifact.networks[0].abi;
 
         // Assert test, test_2 and test_3 functions exist
-        let testExists: boolean = false;
-        let test2Exists: boolean = false;
-        let test3Exists: boolean = false;
+        let testExists = false;
+        let test2Exists = false;
+        let test3Exists = false;
         for (const abiItem of abi) {
             if (abiItem.type !== 'function') {
                 continue;
             }
-            const name: string = abiItem.name;
+            const name = abiItem.name;
             if (name === 'test') {
                 testExists = true;
             }

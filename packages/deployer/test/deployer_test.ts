@@ -32,7 +32,7 @@ describe('#Deployer', () => {
         optimizerEnabled: constants.optimizerEnabled,
         specifiedContracts: new Set(constants.specifiedContracts),
     };
-    const compiler: Compiler = new Compiler(compilerOpts);
+    const compiler = new Compiler(compilerOpts);
     const deployerOpts = {
         artifactsDir,
         networkId: constants.networkId,

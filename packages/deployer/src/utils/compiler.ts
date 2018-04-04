@@ -209,7 +209,7 @@ export function findImportIfExist(
     sourceFileId: string,
     importPath: string,
 ): solc.ImportContents {
-    const dependencyFileId: string = constructDependencyFileId(importPath, sourceFileId);
+    const dependencyFileId = constructDependencyFileId(importPath, sourceFileId);
     const source = contractSources[dependencyFileId];
     if (_.isUndefined(source)) {
         throw new Error(`Contract source not found for ${dependencyFileId}`);
