@@ -83,11 +83,7 @@ export function renameOverloadedFunctions(contractAbi: ContractAbi): ContractAbi
             const overloadedNameMatchesExistingFunctionName = _.has(functionNameList, overloadedName);
             if (overloadedNameMatchesExistingFunctionName) {
                 throw new Error(
-                    "Failed to rename overloaded function '" +
-                        originalName +
-                        "' to '" +
-                        overloadedName +
-                        "' already exists.",
+                    `Failed to rename overloaded function '${originalName}' to '${overloadedName}'. A function with that name already exists.`,
                 );
             }
             (abiItem as MethodAbi).name = overloadedName;

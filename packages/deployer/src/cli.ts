@@ -76,17 +76,16 @@ function getContractDirectoriesFromList(contractDirectoriesList: string): Set<Co
     const directories = new Set();
     const possiblyNamespacedDirectories = contractDirectoriesList.split(',');
     _.forEach(possiblyNamespacedDirectories, namespacedDirectory => {
-        const directory: ContractDirectory = { namespace: '', path: '' };
         const directoryComponents = namespacedDirectory.split(':');
         if (directoryComponents.length === 1) {
-            directory.path = directoryComponents[0];
+            const directory = { namespace: '', path: directoryComponents[0] };
+            directories.add(directory);
         } else if (directoryComponents.length === 2) {
-            directory.namespace = directoryComponents[0];
-            directory.path = directoryComponents[1];
+            const directory = { namespace: directoryComponents[0], path: directoryComponents[1] };
+            directories.add(directory);
         } else {
             throw new Error(`Unable to parse contracts directory: '${namespacedDirectory}'`);
         }
-        directories.add(directory);
     });
 
     return directories;

@@ -76,7 +76,7 @@ export class Compiler {
                         encoding: 'utf8',
                     };
                     const source = await fsWrapper.readFileAsync(contentPath, opts);
-                    const sourceFilePath = contentPath.substr(contractBaseDir.length);
+                    const sourceFilePath = contentPath.slice(contractBaseDir.length);
                     sources[sourceFilePath] = source;
                     logUtils.log(`Reading ${sourceFilePath} source...`);
                 } catch (err) {
@@ -138,9 +138,9 @@ export class Compiler {
         const specifiedContractIds = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
             ? _.keys(contractIds)
             : Array.from(this._specifiedContracts.values());
-        for (const contractId of specifiedContractIds) {
-            await this._compileContractAsync(contractIds[contractId]);
-        }
+        await Promise.all(
+            _.map(specifiedContractIds, async contractId => this._compileContractAsync(contractIds[contractId])),
+        );
     }
     /**
      * Compiles contract and saves artifact to artifactsDir.
