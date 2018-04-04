@@ -19,8 +19,8 @@ export interface ContractNetworks {
 }
 
 export interface ContractDirectory {
-    path: string,
-    namespace: string,
+    path: string;
+    namespace: string;
 }
 
 export interface ContractNetworkData {
@@ -87,7 +87,7 @@ export interface ContractIds {
     [key: string]: string;
 }
 
-export interface ContractSourceData {
+export interface ContractSourceDataByFileId {
     [key: string]: ContractSpecificSourceData;
 }
 
@@ -107,7 +107,7 @@ export interface Token {
     swarmHash: string;
 }
 
-export interface FunctionList {
+export interface FunctionNameToSeenCount {
     [key: string]: number;
 }
 

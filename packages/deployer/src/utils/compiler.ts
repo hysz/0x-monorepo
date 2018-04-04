@@ -1,3 +1,4 @@
+import { AbiType, ContractAbi, MethodAbi } from '@0xproject/types';
 import { logUtils } from '@0xproject/utils';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -5,53 +6,95 @@ import * as solc from 'solc';
 
 import { constants } from './constants';
 import { fsWrapper } from './fs_wrapper';
-import { ContractArtifact, ContractSources } from './types';
+import { ContractArtifact, ContractSources, FunctionNameToSeenCount } from './types';
 
 /**
-* Constructs a system-wide unique identifier for a source file.
-* @param directoryNamespace Namespace of the source file's root contract directory.
-* @param sourceFilePath Path to a source file, relative to contractBaseDir.
-* @return sourceFileId A system-wide unique identifier for the source file.
-*/
-export function constructSourceFileId(directoryNamespace: string, sourceFilePath: string): string {
-    let namespacePrefix:string = "";
-    if(directoryNamespace != "") {
-        namespacePrefix = "/" + directoryNamespace;
-    }
-    return namespacePrefix + "/" + sourceFilePath.replace(/^\/+/g, '');
+ * Constructs a system-wide unique identifier for a source file.
+ * @param directoryNamespace Namespace of the source file's root contract directory.
+ * @param sourceFilePath Path to a source file, relative to contractBaseDir.
+ * @return sourceFileId A system-wide unique identifier for the source file.
+ */
+export function constructUniqueSourceFileId(directoryNamespace: string, sourceFilePath: string): string {
+    const namespacePrefix = !_.isEmpty(directoryNamespace) ? `/${directoryNamespace}` : '';
+    const sourceFilePathNoLeadingSlash = sourceFilePath.replace(/^\/+/g, '');
+    const sourceFileId = `${namespacePrefix}/${sourceFilePathNoLeadingSlash}`;
+    return sourceFileId;
 }
-
 /**
-* Constructs a system-wide unique identifier for a dependency file.
-* @param dependencyFilePath Path from a sourceFile to a dependency.
-* @param  contractBaseDir Base contracts directory of search tree.
-* @return sourceFileId A system-wide unique identifier for the source file.
-*/
+ * Constructs a system-wide unique identifier for a dependency file.
+ * @param dependencyFilePath Path from a sourceFile to a dependency.
+ * @param  contractBaseDir Base contracts directory of search tree.
+ * @return sourceFileId A system-wide unique identifier for the source file.
+ */
 export function constructDependencyFileId(dependencyFilePath: string, sourceFilePath: string): string {
-    if(dependencyFilePath.substr(0,1) == '/') {
+    if (_.startsWith(dependencyFilePath, '/')) {
         // Path of the form /namespace/path/to/dependency.sol
         return dependencyFilePath;
     } else {
         // Dependency is relative to the source file: ./dependency.sol, ../../some/path/dependency.sol, etc.
-        // Join the two paths to construct a valid sourec file id: /namespace/path/to/dependency.sol
+        // Join the two paths to construct a valid source file id: /namespace/path/to/dependency.sol
         return path.join(path.dirname(sourceFilePath), dependencyFilePath);
     }
 }
-
 /**
-* Constructs a system-wide unique identifier for a contract.
-* @param directoryNamespace Namespace of the source file's root contract directory.
-* @param sourceFilePath Path to a source file, relative to contractBaseDir.
-* @return sourceFileId A system-wide unique identifier for contract.
-*/
+ * Constructs a system-wide unique identifier for a contract.
+ * @param directoryNamespace Namespace of the source file's root contract directory.
+ * @param sourceFilePath Path to a source file, relative to contractBaseDir.
+ * @return sourceFileId A system-wide unique identifier for contract.
+ */
 export function constructContractId(directoryNamespace: string, sourceFilePath: string): string {
-    let namespacePrefix:string = "";
-    if(directoryNamespace != "") {
-        namespacePrefix = directoryNamespace + ":";
-    }
-    return namespacePrefix + path.basename(sourceFilePath, constants.SOLIDITY_FILE_EXTENSION);
+    const namespacePrefix = !_.isEmpty(directoryNamespace) ? `${directoryNamespace}:` : '';
+    const sourceFileName = path.basename(sourceFilePath, constants.SOLIDITY_FILE_EXTENSION);
+    const contractId = `${namespacePrefix}${sourceFileName}`;
+    return contractId;
 }
+/**
+ * Overloaded function names are incremented as follows: functionName, functionName_2, functioname_3, ...
+ * If functionName_N already exists then compilation will fail.
+ * @param contractAbi Contract ABI
+ */
+export function renameOverloadedFunctionNames(contractAbi: ContractAbi) {
+    // Collect list of function names in the contract ABI
+    const functionNameList = _.map(contractAbi, abiItem => {
+        const type = abiItem.type;
+        if (type !== AbiType.Function) {
+            return; // skips this abiItem
+        }
 
+        const functionName = (abiItem as MethodAbi).name;
+        return functionName;
+    });
+
+    // Rename overloaded functions
+    const functionNameToSeenCount: FunctionNameToSeenCount = {};
+    _.forEach(contractAbi, abiItem => {
+        const type = abiItem.type;
+        if (type !== AbiType.Function) {
+            return; // skips this abiItem
+        }
+        const originalName = (abiItem as MethodAbi).name;
+        const nameIsOverloaded = _.has(functionNameToSeenCount, originalName);
+        if (nameIsOverloaded) {
+            // Rename function
+            const functionNameCount = ++functionNameToSeenCount[originalName];
+            const overloadedName = `${originalName}_${functionNameCount}`;
+            const overloadedNameMatchesExistingFunctionName = _.has(functionNameList, overloadedName);
+            if (overloadedNameMatchesExistingFunctionName) {
+                throw new Error(
+                    "Failed to rename overloaded function '" +
+                        originalName +
+                        "' to '" +
+                        overloadedName +
+                        "' already exists.",
+                );
+            }
+            (abiItem as MethodAbi).name = overloadedName;
+            logUtils.log(`Renamed overloaded function '${originalName}' to '${overloadedName}'`);
+        } else {
+            functionNameToSeenCount[originalName] = 1;
+        }
+    });
+}
 /**
  * Gets contract data on network or returns if an artifact does not exist.
  * @param artifactsDir Path to the artifacts directory.
@@ -157,8 +200,12 @@ export function parseDependencies(source: string, sourceFileId: string): string[
  * @param  importPath Path of dependency source file.
  * @return Import contents object containing source code of dependency.
  */
-export function findImportIfExist(contractSources: ContractSources, sourceFileId: string, importPath: string): solc.ImportContents {
-    const dependencyFileId:string = constructDependencyFileId(importPath, sourceFileId);
+export function findImportIfExist(
+    contractSources: ContractSources,
+    sourceFileId: string,
+    importPath: string,
+): solc.ImportContents {
+    const dependencyFileId: string = constructDependencyFileId(importPath, sourceFileId);
     const source = contractSources[dependencyFileId];
     if (_.isUndefined(source)) {
         throw new Error(`Contract source not found for ${dependencyFileId}`);

@@ -1,4 +1,4 @@
-import { ContractAbi } from '@0xproject/types';
+import { AbiType, ContractAbi, MethodAbi } from '@0xproject/types';
 import { logUtils, promisify } from '@0xproject/utils';
 import * as ethUtil from 'ethereumjs-util';
 import * as fs from 'fs';
@@ -11,28 +11,29 @@ import solc = require('solc');
 
 import { binPaths } from './solc/bin_paths';
 import {
+    constructContractId,
+    constructUniqueSourceFileId,
     createDirIfDoesNotExistAsync,
     findImportIfExist,
     getContractArtifactIfExistsAsync,
     getNormalizedErrMsg,
     parseDependencies,
     parseSolidityVersionRange,
-    constructSourceFileId,
-    constructContractId,
+    renameOverloadedFunctionNames,
 } from './utils/compiler';
 import { constants } from './utils/constants';
 import { fsWrapper } from './utils/fs_wrapper';
 import {
     CompilerOptions,
     ContractArtifact,
+    ContractDirectory,
+    ContractIds,
     ContractNetworkData,
     ContractNetworks,
-    ContractSourceData,
+    ContractSourceDataByFileId,
     ContractSources,
     ContractSpecificSourceData,
-    FunctionList,
-    ContractIds,
-    ContractDirectory,
+    FunctionNameToSeenCount,
 } from './utils/types';
 import { utils } from './utils/utils';
 
@@ -51,8 +52,7 @@ export class Compiler {
     // This get's set in the beggining of `compileAsync` function. It's not called from a constructor, but it's the only public method of that class and could as well be.
     private _contractSources!: ContractSources;
     private _specifiedContracts: Set<string> = new Set();
-    private _contractSourceData: ContractSourceData = {};
-    private _contractIds: ContractIds = {};
+    private _contractSourceDataByFileId: ContractSourceDataByFileId = {};
 
     /**
      * Recursively retrieves Solidity source code from directory.
@@ -96,7 +96,6 @@ export class Compiler {
         }
         return sources;
     }
-
     /**
      * Instantiates a new instance of the Compiler class.
      * @param opts Options specifying directories, network, and optimization settings.
@@ -116,41 +115,45 @@ export class Compiler {
         await createDirIfDoesNotExistAsync(this._artifactsDir);
         await createDirIfDoesNotExistAsync(SOLC_BIN_DIR);
         this._contractSources = {};
-        for(let contractDir of Array.from(this._contractDirs.values())) {
-            let sources = await Compiler._getContractSourcesAsync(contractDir.path, contractDir.path);
+        const contractIds: ContractIds = {};
+        const contractDirs = Array.from(this._contractDirs.values());
+        for (const contractDir of contractDirs) {
+            const sources = await Compiler._getContractSourcesAsync(contractDir.path, contractDir.path);
             _.forIn(sources, (source, sourceFilePath) => {
-                // Construct a unique ID for this source file
-                const sourceFileId:string = constructSourceFileId(contractDir.namespace, sourceFilePath);
-
+                const sourceFileId = constructUniqueSourceFileId(contractDir.namespace, sourceFilePath);
                 // Record the file's source and data
-                if(!_.isUndefined(this._contractSources[sourceFileId])) {
-                    throw new Error("Found duplicate source files with ID '" + sourceFileId + "'");
+                if (!_.isUndefined(this._contractSources[sourceFileId])) {
+                    throw new Error(`Found duplicate source files with ID '${sourceFileId}'`);
                 }
                 this._contractSources[sourceFileId] = source;
-
                 // Create a mapping between the contract id and its source file id
                 const contractId = constructContractId(contractDir.namespace, sourceFilePath);
-                this._contractIds[contractId] = sourceFileId;
+                if (!_.isUndefined(contractIds[contractId])) {
+                    throw new Error(`Found duplicate contract with ID '${contractId}'`);
+                }
+                contractIds[contractId] = sourceFileId;
             });
         }
-
-         _.forIn(this._contractSources, this._setContractSpecificSourceData.bind(this));
-        const contractIds = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
-            ? _.keys(this._contractIds)
+        _.forIn(this._contractSources, this._setContractSpecificSourceData.bind(this));
+        const specifiedContractIds = this._specifiedContracts.has(ALL_CONTRACTS_IDENTIFIER)
+            ? _.keys(contractIds)
             : Array.from(this._specifiedContracts.values());
-        for (const contractId of contractIds) {
-            await this._compileContractAsync(this._contractIds[contractId]);
+        for (const contractId of specifiedContractIds) {
+            await this._compileContractAsync(contractIds[contractId]);
         }
     }
     /**
-     * Compiles contract and saves artifct to artifactsDir.
+     * Compiles contract and saves artifact to artifactsDir.
      * @param sourceFileId Unique ID of the source file.
      */
     private async _compileContractAsync(sourceFileId: string): Promise<void> {
         if (_.isUndefined(this._contractSources)) {
             throw new Error('Contract sources not yet initialized');
         }
-        const contractSpecificSourceData = this._contractSourceData[sourceFileId];
+        if (_.isUndefined(this._contractSourceDataByFileId[sourceFileId])) {
+            throw new Error(`Contract source for ${sourceFileId} not yet initialized`);
+        }
+        const contractSpecificSourceData = this._contractSourceDataByFileId[sourceFileId];
         const currentArtifactIfExists = await getContractArtifactIfExistsAsync(this._artifactsDir, sourceFileId);
         const sourceHash = `0x${contractSpecificSourceData.sourceHash.toString('hex')}`;
         const sourceTreeHash = `0x${contractSpecificSourceData.sourceTreeHash.toString('hex')}`;
@@ -203,7 +206,6 @@ export class Compiler {
             findImportIfExist(this._contractSources, sourceFileId, importPath),
         );
 
-
         if (!_.isUndefined(compiled.errors)) {
             const SOLIDITY_WARNING_PREFIX = 'Warning';
             const isError = (errorOrWarning: string) => !errorOrWarning.includes(SOLIDITY_WARNING_PREFIX);
@@ -231,41 +233,13 @@ export class Compiler {
             );
         }
         const abi: ContractAbi = JSON.parse(compiled.contracts[contractIdentifier].interface);
+        renameOverloadedFunctionNames(abi);
         const bytecode = `0x${compiled.contracts[contractIdentifier].bytecode}`;
         const runtimeBytecode = `0x${compiled.contracts[contractIdentifier].runtimeBytecode}`;
         const sourceMap = compiled.contracts[contractIdentifier].srcmap;
         const sourceMapRuntime = compiled.contracts[contractIdentifier].srcmapRuntime;
         const sources = _.keys(compiled.sources);
         const updated_at = Date.now();
-
-        // There is no function overloading in typescript, so we must change the Typescript ABI interface.
-        // Overloaded function names are incremented as follows: functionName, functionName_2, functioname_3, ...
-        // If functionName_N already exists then compilation will fail.
-        const functionList:FunctionList = {};
-        for(let i = 0; i < abi.length; ++i) {
-            const type:string = abi[i].type;
-            if(type !== "function") continue;
-
-            // Construct possible function names
-            const originalName:string = (abi[i] as any).name;
-            const overloadedName:string = (originalName in functionList) ? originalName+"_"+(++functionList[originalName]) : originalName;
-            const unoverloadedName:string = originalName.indexOf("_") > 0 ? originalName.substr(0, originalName.lastIndexOf("_")) : originalName;
-
-            // Fail if an overloaded function was renamed to a function that already exists
-            if((overloadedName != originalName && overloadedName in functionList) ||
-                (unoverloadedName != originalName && unoverloadedName in functionList))
-            {
-                throw new Error("Failed to rename overloaded function '" + unoverloadedName +  "' to '" + overloadedName + "' already exists.");
-            }
-
-            // Replace function name in ABI if overloaded
-            if(overloadedName != originalName) {
-                (abi[i] as any).name = overloadedName;
-                console.log("Renamed overloaded function '" + originalName + "' to '" + overloadedName + "'");
-            } else {
-                functionList[originalName] = 1;
-            }
-        }
 
         const contractNetworkData: ContractNetworkData = {
             solc_version: solcVersion,
@@ -312,14 +286,14 @@ export class Compiler {
      * @return Object with contract dependencies and keccak256 hash of source.
      */
     private _setContractSpecificSourceData(source: string, fileId: string): void {
-        if (!_.isUndefined(this._contractSourceData[fileId])) {
+        if (!_.isUndefined(this._contractSourceDataByFileId[fileId])) {
             return;
         }
         const sourceHash = ethUtil.sha3(source);
         const solcVersionRange = parseSolidityVersionRange(source);
         const dependencies = parseDependencies(source, fileId);
         const sourceTreeHash = this._getSourceTreeHash(fileId, sourceHash, dependencies);
-        this._contractSourceData[fileId] = {
+        this._contractSourceDataByFileId[fileId] = {
             dependencies,
             solcVersionRange,
             sourceHash,
@@ -338,7 +312,7 @@ export class Compiler {
             const dependencySourceTreeHashes = _.map(dependencies, dependency => {
                 const source = this._contractSources[dependency];
                 this._setContractSpecificSourceData(source, dependency);
-                const sourceData = this._contractSourceData[dependency];
+                const sourceData = this._contractSourceDataByFileId[dependency];
                 return this._getSourceTreeHash(dependency, sourceData.sourceHash, sourceData.dependencies);
             });
             const sourceTreeHashesBuffer = Buffer.concat([sourceHash, ...dependencySourceTreeHashes]);

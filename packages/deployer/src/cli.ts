@@ -11,7 +11,7 @@ import * as yargs from 'yargs';
 import { commands } from './commands';
 import { constants } from './utils/constants';
 import { consoleReporter } from './utils/error_reporter';
-import { CliOptions, CompilerOptions, DeployerOptions, ContractDirectory } from './utils/types';
+import { CliOptions, CompilerOptions, ContractDirectory, DeployerOptions } from './utils/types';
 
 const DEFAULT_OPTIMIZER_ENABLED = false;
 const DEFAULT_CONTRACTS_DIR = path.resolve('src/contracts');
@@ -74,22 +74,20 @@ async function onDeployCommandAsync(argv: CliOptions): Promise<void> {
  */
 function getContractDirectoriesFromList(contractDirectoriesList: string): Set<ContractDirectory> {
     const directories = new Set();
-    const namespacedDirectories: string[] = contractDirectoriesList.split(",");
-
-    for(let i = 0; i < namespacedDirectories.length; ++i) {
-        let directory: ContractDirectory = {namespace: "", path: ""};
-        const directoryComponents = namespacedDirectories[i].split(":");
-        if(directoryComponents.length == 1) {
-            directory.namespace = "";
+    const possiblyNamespacedDirectories = contractDirectoriesList.split(',');
+    _.forEach(possiblyNamespacedDirectories, namespacedDirectory => {
+        const directory: ContractDirectory = { namespace: '', path: '' };
+        const directoryComponents = namespacedDirectory.split(':');
+        if (directoryComponents.length === 1) {
             directory.path = directoryComponents[0];
-        } else if(directoryComponents.length == 2) {
+        } else if (directoryComponents.length === 2) {
             directory.namespace = directoryComponents[0];
             directory.path = directoryComponents[1];
         } else {
-            throw new Error("Unable to parse contracts directory: '" + namespacedDirectories[i] + "'");
+            throw new Error(`Unable to parse contracts directory: '${namespacedDirectory}'`);
         }
         directories.add(directory);
-    }
+    });
 
     return directories;
 }
@@ -132,7 +130,8 @@ function deployCommandBuilder(yargsInstance: any) {
         .option('contract-dirs', {
             type: 'string',
             default: DEFAULT_CONTRACTS_DIR,
-            description: 'comma separated list of contract directories.\nTo avoid filename clashes, directories should be prefixed with a namespace as follows: \'namespace:/path/to/dir\'.',
+            description:
+                "comma separated list of contract directories.\nTo avoid filename clashes, directories should be prefixed with a namespace as follows: 'namespace:/path/to/dir'.",
         })
         .option('network-id', {
             type: 'number',

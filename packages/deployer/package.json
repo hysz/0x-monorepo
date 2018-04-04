@@ -6,7 +6,7 @@
     "types": "lib/src/index.d.ts",
     "scripts": {
         "build:watch": "tsc -w",
-        "build": "yarn clean && copyfiles 'test/fixtures/contracts/**/*' 'test/fixtures/overloaded_contracts/**/*' ./lib && tsc && copyfiles -u 3 './lib/src/monorepo_scripts/**/*' ./scripts",
+        "build": "yarn clean && copyfiles 'test/fixtures/contracts/**/*' ./lib && tsc && copyfiles -u 3 './lib/src/monorepo_scripts/**/*' ./scripts",
         "test": "run-s build run_mocha",
         "run_mocha": "mocha lib/test/*_test.js",
         "test:coverage": "nyc npm run test --all && yarn coverage:report:lcov",

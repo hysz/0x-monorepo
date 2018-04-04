@@ -7,10 +7,10 @@ import { fsWrapper } from '../src/utils/fs_wrapper';
 import {
     CompilerOptions,
     ContractArtifact,
+    ContractDirectory,
     ContractNetworkData,
     DoneCallback,
-    ContractDirectory,
-    } from '../src/utils/types';
+} from '../src/utils/types';
 
 import { constructor_args, exchange_binary } from './fixtures/exchange_bin';
 import { constants } from './util/constants';
@@ -20,19 +20,19 @@ const expect = chai.expect;
 describe('#Deployer', () => {
     const artifactsDir = `${__dirname}/fixtures/artifacts`;
     const exchangeArtifactPath = `${artifactsDir}/Exchange.json`;
-    const mainContractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts/main`, namespace: ""};
-    const baseContractDir:ContractDirectory = {path: `${__dirname}/fixtures/contracts/base`, namespace: "base"};
-    let contractDirs:Set<ContractDirectory> = new Set();
+    const mainContractDir: ContractDirectory = { path: `${__dirname}/fixtures/contracts/main`, namespace: '' };
+    const baseContractDir: ContractDirectory = { path: `${__dirname}/fixtures/contracts/base`, namespace: 'base' };
+    const contractDirs: Set<ContractDirectory> = new Set();
     contractDirs.add(mainContractDir);
     contractDirs.add(baseContractDir);
     const compilerOpts: CompilerOptions = {
         artifactsDir,
-        contractDirs: contractDirs,
+        contractDirs,
         networkId: constants.networkId,
         optimizerEnabled: constants.optimizerEnabled,
         specifiedContracts: new Set(constants.specifiedContracts),
     };
-    const compiler = new Compiler(compilerOpts);
+    const compiler: Compiler = new Compiler(compilerOpts);
     const deployerOpts = {
         artifactsDir,
         networkId: constants.networkId,
