@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-import { AbiDefinition, ConstructorAbi, DataItem, EventAbi, MethodAbi } from '@0xproject/types';
+import { AbiDefinition, ConstructorAbi, EventAbi, MethodAbi } from '@0xproject/types';
 import { abiUtils, logUtils } from '@0xproject/utils';
 import chalk from 'chalk';
-import * as ethersContracts from 'ethers-contracts';
 import * as fs from 'fs';
 import { sync as globSync } from 'glob';
 import * as Handlebars from 'handlebars';
@@ -84,10 +83,6 @@ function writeOutputFile(name: string, renderedTsCode: string): void {
 
 Handlebars.registerHelper('parameterType', utils.solTypeToTsType.bind(utils, ParamKind.Input, args.backend));
 Handlebars.registerHelper('returnType', utils.solTypeToTsType.bind(utils, ParamKind.Output, args.backend));
-Handlebars.registerHelper('jsonStringify', (context: any) => {
-    return JSON.stringify(context);
-});
-
 if (args.partials) {
     registerPartials(args.partials);
 }
@@ -123,7 +118,6 @@ for (const abiFileName of abiFileNames) {
         );
         process.exit(1);
     }
-    const ABI_SORTED = abiUtils.renameOverloadedMethods(ABI);
 
     let ctor = ABI.find((abi: AbiDefinition) => abi.type === ABI_TYPE_CONSTRUCTOR) as ConstructorAbi;
     if (_.isUndefined(ctor)) {
@@ -131,7 +125,7 @@ for (const abiFileName of abiFileNames) {
     }
 
     const methodAbis = ABI.filter((abi: AbiDefinition) => abi.type === ABI_TYPE_METHOD) as MethodAbi[];
-    const sortedMethodAbis = ABI_SORTED.filter((abi: AbiDefinition) => abi.type === ABI_TYPE_METHOD) as MethodAbi[];
+    const methodAbisSanitized = abiUtils.renameOverloadedMethods(methodAbis) as MethodAbi[];
     const methodsData = _.map(methodAbis, (methodAbi, i: number) => {
         _.map(methodAbi.inputs, (input, j: number) => {
             if (_.isEmpty(input.name)) {
@@ -144,7 +138,7 @@ for (const abiFileName of abiFileNames) {
             ...methodAbi,
             singleReturnValue: methodAbi.outputs.length === 1,
             hasReturnValue: methodAbi.outputs.length !== 0,
-            tsName: sortedMethodAbis[i].name,
+            tsName: methodAbisSanitized[i].name,
             signature: abiUtils.getFunctionSignature(methodAbi),
         };
         return methodData;

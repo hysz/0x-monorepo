@@ -1,4 +1,4 @@
-import { AbiDefinition, AbiType, ConstructorAbi, ContractAbi, DataItem, MethodAbi } from '@0xproject/types';
+import { AbiType, ConstructorAbi, DataItem } from '@0xproject/types';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';

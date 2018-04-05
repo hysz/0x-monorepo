@@ -1,5 +1,5 @@
 import { AbiType, ConstructorAbi, ContractAbi, TxData } from '@0xproject/types';
-import { abiUtils, logUtils } from '@0xproject/utils';
+import { logUtils } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as _ from 'lodash';
 import * as Web3 from 'web3';
@@ -71,10 +71,6 @@ export class Deployer {
             gas,
         };
         const abi = contractNetworkDataIfExists.abi;
-
-        console.log('EEEEE');
-        console.log(abi);
-        console.log('EEEEE');
         const constructorAbi = _.find(abi, { type: AbiType.Constructor }) as ConstructorAbi;
         const constructorArgs = _.isUndefined(constructorAbi) ? [] : constructorAbi.inputs;
         if (constructorArgs.length !== args.length) {

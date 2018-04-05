@@ -20,9 +20,6 @@ describe('Metacoin', () => {
     const INITIAL_BALANCE = new BigNumber(10000);
     before(async () => {
         const metacoinInstance = await deployer.deployAsync('Metacoin');
-        console.log('RRRR');
-        console.log(metacoinInstance.abi);
-        console.log('RRRR');
         web3Wrapper.abiDecoder.addABI(metacoinInstance.abi);
         metacoin = new MetacoinContract(web3Wrapper, metacoinInstance.abi, metacoinInstance.address);
     });

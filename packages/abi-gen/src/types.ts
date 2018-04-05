@@ -1,5 +1,4 @@
 import { EventAbi, MethodAbi } from '@0xproject/types';
-import * as ethersContracts from 'ethers-contracts';
 
 export enum ParamKind {
     Input = 'input',

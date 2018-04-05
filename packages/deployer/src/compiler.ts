@@ -19,7 +19,6 @@ import {
     getNormalizedErrMsg,
     parseDependencies,
     parseSolidityVersionRange,
-    //renameOverloadedFunctions,
 } from './utils/compiler';
 import { constants } from './utils/constants';
 import { fsWrapper } from './utils/fs_wrapper';
@@ -233,7 +232,6 @@ export class Compiler {
             );
         }
         const abi: ContractAbi = JSON.parse(compiled.contracts[contractIdentifier].interface);
-        // const abi = renameOverloadedFunctions(abiMaybeWithOverloadedFunctions);
         const bytecode = `0x${compiled.contracts[contractIdentifier].bytecode}`;
         const runtimeBytecode = `0x${compiled.contracts[contractIdentifier].runtimeBytecode}`;
         const sourceMap = compiled.contracts[contractIdentifier].srcmap;
