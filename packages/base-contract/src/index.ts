@@ -6,8 +6,12 @@ import * as _ from 'lodash';
 
 import { formatABIDataItem } from './utils';
 
+export interface EthersInterfaceByFunctionSignature {
+    [key: string]: ethersContracts.Interface;
+}
+
 export class BaseContract {
-    //protected _ethersInterface: ethersContracts.Interface;
+    protected _ethersInterfacesByFunctionSignature: EthersInterfaceByFunctionSignature;
     protected _web3Wrapper: Web3Wrapper;
     public abi: ContractAbi;
     public address: string;
@@ -49,29 +53,28 @@ export class BaseContract {
         }
         return txDataWithDefaults;
     }
-    protected _lookup(sig: string): ethersContracts.Interface {
-        const methodAbis = this.abi.filter((abi: AbiDefinition) => abi.type === AbiType.Function) as MethodAbi[];
-        const singleMethodAbis = _.transform(
-            methodAbis,
-            (result: MethodAbi[], ma) => {
-                if (abiUtils.getFunctionSignature(ma) === sig) {
-                    result.push(ma);
-                }
-            },
-            [],
-        );
-        if (singleMethodAbis.length !== 1) {
-            throw new Error(`Failed to lookup function ; with signature $; {sig; }`);
+    protected _lookup(functionSignature: string): ethersContracts.Interface {
+        const ethersInterface = this._ethersInterfacesByFunctionSignature[functionSignature];
+        if (_.isUndefined(ethersInterface)) {
+            throw new Error(`Failed to lookup method with function signature '${functionSignature}'`);
         }
-        const ethersInterface = new ethersContracts.Interface(singleMethodAbis);
+
         return ethersInterface;
     }
     constructor(web3Wrapper: Web3Wrapper, abi: ContractAbi, address: string) {
         this._web3Wrapper = web3Wrapper;
         this.abi = abi;
         this.address = address;
-        console.log('New Cons');
-        //this._ethersInterface = new ethersContracts.Interface(abi);
-        //        console.log(this._ethersInterface.functions);
+        const methodAbis = this.abi.filter(
+            (abiDefinition: AbiDefinition) => abiDefinition.type === AbiType.Function,
+        ) as MethodAbi[];
+        this._ethersInterfacesByFunctionSignature = _.transform(
+            methodAbis,
+            (result: EthersInterfaceByFunctionSignature, methodAbi) => {
+                const functionSignature = abiUtils.getFunctionSignature(methodAbi);
+                result[functionSignature] = new ethersContracts.Interface([methodAbi]);
+            },
+            {},
+        );
     }
 }
