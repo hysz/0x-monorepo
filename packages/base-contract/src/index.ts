@@ -53,7 +53,7 @@ export class BaseContract {
         }
         return txDataWithDefaults;
     }
-    protected _lookup(functionSignature: string): ethersContracts.Interface {
+    protected _lookupEthersInterface(functionSignature: string): ethersContracts.Interface {
         const ethersInterface = this._ethersInterfacesByFunctionSignature[functionSignature];
         if (_.isUndefined(ethersInterface)) {
             throw new Error(`Failed to lookup method with function signature '${functionSignature}'`);

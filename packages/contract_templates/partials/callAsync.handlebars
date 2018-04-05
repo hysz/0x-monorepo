@@ -7,7 +7,7 @@ async callAsync(
     const self = this as any as {{contractName}}Contract;
     const inputAbi = (_.find(self.abi, {name: '{{this.name}}'}) as MethodAbi).inputs;
     [{{> params inputs=inputs}}] = BaseContract._formatABIDataItemList(inputAbi, [{{> params inputs=inputs}}], BaseContract._bigNumberToString.bind(self));
-    const encodedData = self._lookup('{{this.signature}}').functions.{{this.name}}(
+    const encodedData = self._lookupEthersInterface('{{this.signature}}').functions.{{this.name}}(
         {{> params inputs=inputs}}
     ).data;
     const callDataWithDefaults = await self._applyDefaultsToTxDataAsync(
