@@ -49,53 +49,6 @@ export function constructContractId(directoryNamespace: string, sourceFilePath: 
     return contractId;
 }
 /**
- * Overloaded function names are incremented as follows: functionName, functionName_2, functioname_3, ...
- * If functionName_N already exists then compilation will fail.
- * @param contractAbi Contract ABI
- * @return Contract ABI with overloaded functions renamed.
- */
-export function renameOverloadedFunctions(contractAbi: ContractAbi): ContractAbi {
-    // Collect list of function names in the contract ABI
-    const functionNameList = _.map(contractAbi, abiItem => {
-        const type = abiItem.type;
-        if (type !== AbiType.Function) {
-            return; // skips this abiItem
-        }
-
-        const functionName = (abiItem as MethodAbi).name;
-        return functionName;
-    });
-
-    // Rename overloaded functions
-    const outputContractAbi = _.cloneDeep(contractAbi);
-    const functionNameToSeenCount: FunctionNameToSeenCount = {};
-    _.forEach(outputContractAbi, abiItem => {
-        const type = abiItem.type;
-        if (type !== AbiType.Function) {
-            return; // skips this abiItem
-        }
-        const originalName = (abiItem as MethodAbi).name;
-        const nameIsOverloaded = _.has(functionNameToSeenCount, originalName);
-        if (nameIsOverloaded) {
-            // Rename function
-            const functionNameCount = ++functionNameToSeenCount[originalName];
-            const overloadedName = `${originalName}_${functionNameCount}`;
-            const overloadedNameMatchesExistingFunctionName = _.has(functionNameList, overloadedName);
-            if (overloadedNameMatchesExistingFunctionName) {
-                throw new Error(
-                    `Failed to rename overloaded function '${originalName}' to '${overloadedName}'. A function with that name already exists.`,
-                );
-            }
-            (abiItem as MethodAbi).name = overloadedName;
-            logUtils.log(`Renamed overloaded function '${originalName}' to '${overloadedName}'`);
-        } else {
-            functionNameToSeenCount[originalName] = 1;
-        }
-    });
-
-    return outputContractAbi;
-}
-/**
  * Gets contract data on network or returns if an artifact does not exist.
  * @param artifactsDir Path to the artifacts directory.
  * @param fileName Name of contract file.

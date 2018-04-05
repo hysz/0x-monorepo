@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { AbiDefinition, ConstructorAbi, EventAbi, MethodAbi } from '@0xproject/types';
-import { logUtils } from '@0xproject/utils';
+import { AbiDefinition, ConstructorAbi, DataItem, EventAbi, MethodAbi } from '@0xproject/types';
+import { abiUtils, logUtils } from '@0xproject/utils';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import { sync as globSync } from 'glob';
@@ -12,7 +12,7 @@ import * as yargs from 'yargs';
 
 import toSnakeCase = require('to-snake-case');
 
-import { ContextData, ContractsBackend, ParamKind } from './types';
+import { ContextData, ContractsBackend, Method, ParamKind } from './types';
 import { utils } from './utils';
 
 const ABI_TYPE_CONSTRUCTOR = 'constructor';
@@ -83,6 +83,9 @@ function writeOutputFile(name: string, renderedTsCode: string): void {
 
 Handlebars.registerHelper('parameterType', utils.solTypeToTsType.bind(utils, ParamKind.Input, args.backend));
 Handlebars.registerHelper('returnType', utils.solTypeToTsType.bind(utils, ParamKind.Output, args.backend));
+Handlebars.registerHelper('jsonStringify', (context: any) => {
+    return JSON.stringify(context);
+});
 
 if (args.partials) {
     registerPartials(args.partials);
@@ -119,6 +122,7 @@ for (const abiFileName of abiFileNames) {
         );
         process.exit(1);
     }
+    ABI = abiUtils.renameOverloadedMethods(ABI);
 
     let ctor = ABI.find((abi: AbiDefinition) => abi.type === ABI_TYPE_CONSTRUCTOR) as ConstructorAbi;
     if (_.isUndefined(ctor)) {

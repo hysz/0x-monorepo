@@ -71,6 +71,9 @@ export class Deployer {
             gas,
         };
         const abi = contractNetworkDataIfExists.abi;
+        console.log('EEEEE');
+        console.log(abi);
+        console.log('EEEEE');
         const constructorAbi = _.find(abi, { type: AbiType.Constructor }) as ConstructorAbi;
         const constructorArgs = _.isUndefined(constructorAbi) ? [] : constructorAbi.inputs;
         if (constructorArgs.length !== args.length) {

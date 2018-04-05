@@ -29,8 +29,8 @@ beforeEach(function(done: DoneCallback) {
 });
 /* tslint:enable */
 
-describe('#OverloadedFunctions', () => {
-    it('should successfully compile overloaded functions, renaming as necessary.', async () => {
+describe.only('#OverloadedFunctions', () => {
+    it.only('should successfully compile overloaded functions, renaming as necessary.', async () => {
         // Compile 'Passes' contract
         const overloadTestContractDir: ContractDirectory = {
             path: `${__dirname}/fixtures/contracts/overloaded`,

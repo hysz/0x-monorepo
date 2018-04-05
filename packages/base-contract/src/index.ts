@@ -1,5 +1,5 @@
 import { ContractAbi, DataItem, TxData, TxDataPayable } from '@0xproject/types';
-import { BigNumber } from '@0xproject/utils';
+import { abiUtils, BigNumber } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as ethersContracts from 'ethers-contracts';
 import * as _ from 'lodash';
@@ -51,8 +51,8 @@ export class BaseContract {
     }
     constructor(web3Wrapper: Web3Wrapper, abi: ContractAbi, address: string) {
         this._web3Wrapper = web3Wrapper;
-        this.abi = abi;
+        this.abi = abiUtils.renameOverloadedMethods(abi);
         this.address = address;
-        this._ethersInterface = new ethersContracts.Interface(abi);
+        this._ethersInterface = new ethersContracts.Interface(this.abi);
     }
 }

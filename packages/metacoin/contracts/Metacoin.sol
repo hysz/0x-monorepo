@@ -22,4 +22,12 @@ contract Metacoin {
         Transfer(msg.sender, transferData.to, transferData.amount);
         return true;
     }
+
+    function transfer(TransferData transferData, uint32 greg) public returns (bool success) {
+        if (balances[msg.sender] < transferData.amount) return false;
+        balances[msg.sender] -= transferData.amount;
+        balances[transferData.to] += transferData.amount;
+        Transfer(msg.sender, transferData.to, transferData.amount);
+        return true;
+    }
 }
