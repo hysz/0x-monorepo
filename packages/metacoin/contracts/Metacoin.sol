@@ -30,4 +30,5 @@ contract Metacoin {
         Transfer(msg.sender, transferData.to, transferData.amount);
         return true;
     }
+
 }

@@ -11,11 +11,6 @@ export const abiUtils = {
     renameOverloadedMethods(inputContractAbi: ContractAbi): ContractAbi {
         const contractAbi = _.cloneDeep(inputContractAbi);
         const methodAbis = contractAbi.filter((abi: AbiDefinition) => abi.type === AbiType.Function) as MethodAbi[];
-        console.log(
-            _.map(methodAbis, methodAbi => {
-                return `${methodAbi.name}(${methodAbi.inputs.length})`;
-            }),
-        );
         const methodAbiOrdered = _.transform(
             methodAbis,
             (result: Array<{ index: number; methodAbi: MethodAbi }>, methodAbi, i: number) => {
@@ -37,15 +32,25 @@ export const abiUtils = {
             },
             {},
         );
-        // Fix overloaded method names
+        // Rename overloaded methods to overloadedMethoName_1, overloadedMethoName_2, ...
         const methodAbisRenamed = _.transform(
             methodAbisByName,
             (result: MethodAbi[], methodAbisWithSameName: Array<{ index: number; methodAbi: MethodAbi }>) => {
                 _.forEach(methodAbisWithSameName, (entry, i: number) => {
-                    // Append an identifier to overloaded methods
                     if (methodAbisWithSameName.length > 1) {
                         const overloadedMethodId = i + 1;
-                        entry.methodAbi.name = `${entry.methodAbi.name}_${overloadedMethodId}`;
+                        const sanitizedMethodName = `${entry.methodAbi.name}_${overloadedMethodId}`;
+                        const indexOfExistingAbiWithSanitizedMethodNameIfExists = _.findIndex(
+                            methodAbis,
+                            methodAbi => methodAbi.name === sanitizedMethodName,
+                        );
+                        if (indexOfExistingAbiWithSanitizedMethodNameIfExists >= 0) {
+                            const methodName = entry.methodAbi.name;
+                            throw new Error(
+                                `Failed to rename overloaded method '${methodName}' to '${sanitizedMethodName}'. A method with this name already exists.`,
+                            );
+                        }
+                        entry.methodAbi.name = sanitizedMethodName;
                     }
                     // Add method to list of ABIs in its original position
                     result.splice(entry.index, 0, entry.methodAbi);
