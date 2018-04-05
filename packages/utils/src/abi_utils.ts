@@ -2,9 +2,19 @@ import { AbiDefinition, AbiType, ConstructorAbi, ContractAbi, DataItem, MethodAb
 import * as _ from 'lodash';
 
 export const abiUtils = {
+    parseFunctionParam(param: DataItem): string {
+        if (param.type === 'tuple') {
+            // Parse out tuple types into {type_1, type_2, ..., type_N}
+            const tupleComponents = param.components;
+            const paramString = _.map(tupleComponents, component => this.parseFunctionParam(component));
+            const tupleParamString = `{${paramString}}`;
+            return tupleParamString;
+        }
+        return param.type;
+    },
     getFunctionSignature(abi: MethodAbi): string {
         const functionName = abi.name;
-        const parameterTypeList = abi.inputs.map((param: DataItem) => `${param.type}`);
+        const parameterTypeList = abi.inputs.map((param: DataItem) => this.parseFunctionParam(param));
         const functionSignature = `${functionName}(${parameterTypeList})`;
         return functionSignature;
     },

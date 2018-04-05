@@ -6,6 +6,14 @@ contract Metacoin {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
+    struct TT {
+        string g;
+    }
+    struct TG {
+        int greg;
+        TT yo;
+    }
+
     struct TransferData {
         address to;
         uint256 amount;
@@ -28,6 +36,10 @@ contract Metacoin {
         balances[msg.sender] -= transferData.amount;
         balances[transferData.to] += transferData.amount;
         Transfer(msg.sender, transferData.to, transferData.amount);
+        return true;
+    }
+
+    function greg(TG tg) public returns (bool success) {
         return true;
     }
 
