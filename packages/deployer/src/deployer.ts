@@ -1,5 +1,5 @@
 import { AbiType, ConstructorAbi, ContractAbi, TxData } from '@0xproject/types';
-import { logUtils } from '@0xproject/utils';
+import { abiUtils, logUtils } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as _ from 'lodash';
 import * as Web3 from 'web3';
@@ -70,7 +70,8 @@ export class Deployer {
             data,
             gas,
         };
-        const abi = contractNetworkDataIfExists.abi;
+        const abiW = contractNetworkDataIfExists.abi;
+        const abi = abiUtils.renameOverloadedMethods(abiW);
         console.log('EEEEE');
         console.log(abi);
         console.log('EEEEE');

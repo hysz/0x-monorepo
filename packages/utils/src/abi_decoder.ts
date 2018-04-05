@@ -12,6 +12,7 @@ import {
 import * as ethersContracts from 'ethers-contracts';
 import * as _ from 'lodash';
 
+import { abiUtils } from './abi_utils';
 import { BigNumber } from './configured_bignumber';
 
 export class AbiDecoder {
@@ -73,10 +74,11 @@ export class AbiDecoder {
             };
         }
     }
-    public addABI(abiArray: AbiDefinition[]): void {
-        if (_.isUndefined(abiArray)) {
+    public addABI(inputAbiArray: AbiDefinition[]): void {
+        if (_.isUndefined(inputAbiArray)) {
             return;
         }
+        const abiArray = abiUtils.renameOverloadedMethods(inputAbiArray);
         const ethersInterface = new ethersContracts.Interface(abiArray);
         _.map(abiArray, (abi: AbiDefinition) => {
             if (abi.type === AbiType.Event) {
