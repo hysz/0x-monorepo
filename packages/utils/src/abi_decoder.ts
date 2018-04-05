@@ -74,11 +74,11 @@ export class AbiDecoder {
             };
         }
     }
-    public addABI(inputAbiArray: AbiDefinition[]): void {
-        if (_.isUndefined(inputAbiArray)) {
+    public addABI(abiArray: AbiDefinition[]): void {
+        if (_.isUndefined(abiArray)) {
             return;
         }
-        const abiArray = abiUtils.renameOverloadedMethods(inputAbiArray);
+        //const abiArray = abiUtils.renameOverloadedMethods(inputAbiArray);
         const ethersInterface = new ethersContracts.Interface(abiArray);
         _.map(abiArray, (abi: AbiDefinition) => {
             if (abi.type === AbiType.Event) {

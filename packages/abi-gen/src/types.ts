@@ -1,4 +1,5 @@
 import { EventAbi, MethodAbi } from '@0xproject/types';
+import * as ethersContracts from 'ethers-contracts';
 
 export enum ParamKind {
     Input = 'input',
@@ -13,6 +14,8 @@ export enum ContractsBackend {
 export interface Method extends MethodAbi {
     singleReturnValue: boolean;
     hasReturnValue: boolean;
+    tsName: string;
+    signature: string;
 }
 
 export interface ContextData {

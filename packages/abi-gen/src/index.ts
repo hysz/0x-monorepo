@@ -3,6 +3,7 @@
 import { AbiDefinition, ConstructorAbi, DataItem, EventAbi, MethodAbi } from '@0xproject/types';
 import { abiUtils, logUtils } from '@0xproject/utils';
 import chalk from 'chalk';
+import * as ethersContracts from 'ethers-contracts';
 import * as fs from 'fs';
 import { sync as globSync } from 'glob';
 import * as Handlebars from 'handlebars';
@@ -122,7 +123,7 @@ for (const abiFileName of abiFileNames) {
         );
         process.exit(1);
     }
-    ABI = abiUtils.renameOverloadedMethods(ABI);
+    const ABI_SORTED = abiUtils.renameOverloadedMethods(ABI);
 
     let ctor = ABI.find((abi: AbiDefinition) => abi.type === ABI_TYPE_CONSTRUCTOR) as ConstructorAbi;
     if (_.isUndefined(ctor)) {
@@ -130,11 +131,12 @@ for (const abiFileName of abiFileNames) {
     }
 
     const methodAbis = ABI.filter((abi: AbiDefinition) => abi.type === ABI_TYPE_METHOD) as MethodAbi[];
-    const methodsData = _.map(methodAbis, methodAbi => {
-        _.map(methodAbi.inputs, (input, i: number) => {
+    const sortedMethodAbis = ABI_SORTED.filter((abi: AbiDefinition) => abi.type === ABI_TYPE_METHOD) as MethodAbi[];
+    const methodsData = _.map(methodAbis, (methodAbi, i: number) => {
+        _.map(methodAbi.inputs, (input, j: number) => {
             if (_.isEmpty(input.name)) {
                 // Auto-generated getters don't have parameter names
-                input.name = `index_${i}`;
+                input.name = `index_${j}`;
             }
         });
         // This will make templates simpler
@@ -142,6 +144,8 @@ for (const abiFileName of abiFileNames) {
             ...methodAbi,
             singleReturnValue: methodAbi.outputs.length === 1,
             hasReturnValue: methodAbi.outputs.length !== 0,
+            tsName: sortedMethodAbis[i].name,
+            signature: abiUtils.getFunctionSignature(methodAbi),
         };
         return methodData;
     });

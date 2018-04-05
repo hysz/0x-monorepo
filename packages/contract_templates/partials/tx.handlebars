@@ -1,4 +1,4 @@
-public {{this.name}} = {
+public {{this.tsName}} = {
     async sendTransactionAsync(
     {{> typed_params inputs=inputs}}
     {{#this.payable}}
@@ -11,15 +11,15 @@ public {{this.name}} = {
         const self = this as any as {{contractName}}Contract;
         const inputAbi = (_.find(self.abi, {name: '{{this.name}}'}) as MethodAbi).inputs;
         [{{> params inputs=inputs}}] = BaseContract._formatABIDataItemList(inputAbi, [{{> params inputs=inputs}}], BaseContract._bigNumberToString.bind(self));
-        const encodedData = self._ethersInterface.functions.{{this.name}}(
+        const encodedData = self._lookup('{{this.signature}}').functions.{{this.name}}(
             {{> params inputs=inputs}}
-        ).data
+        ).data;
         const txDataWithDefaults = await self._applyDefaultsToTxDataAsync(
             {
                 ...txData,
                 data: encodedData,
             },
-            self.{{this.name}}.estimateGasAsync.bind(
+            self.{{this.tsName}}.estimateGasAsync.bind(
                 self,
                 {{> params inputs=inputs}}
             ),
@@ -34,9 +34,9 @@ public {{this.name}} = {
         const self = this as any as {{contractName}}Contract;
         const inputAbi = (_.find(self.abi, {name: '{{this.name}}'}) as MethodAbi).inputs;
         [{{> params inputs=inputs}}] = BaseContract._formatABIDataItemList(inputAbi, [{{> params inputs=inputs}}], BaseContract._bigNumberToString.bind(this));
-        const encodedData = self._ethersInterface.functions.{{this.name}}(
+        const encodedData = self._lookup('{{this.signature}}').functions.{{this.name}}(
             {{> params inputs=inputs}}
-        ).data
+        ).data;
         const txDataWithDefaults = await self._applyDefaultsToTxDataAsync(
             {
                 ...txData,
@@ -50,11 +50,11 @@ public {{this.name}} = {
     {{> typed_params inputs=inputs}}
     ): string {
         const self = this as any as {{contractName}}Contract;
-        const inputAbi = (_.find(self.abi, {name: '{{this.name}}'}) as MethodAbi).inputs;
+        const inputAbi = (_.find(self.abi, {name: '{{this.signature}}'}) as MethodAbi).inputs;
         [{{> params inputs=inputs}}] = BaseContract._formatABIDataItemList(inputAbi, [{{> params inputs=inputs}}], BaseContract._bigNumberToString.bind(self));
-        const abiEncodedTransactionData = self._ethersInterface.functions.{{this.name}}(
+        const abiEncodedTransactionData = self._lookup('{{this.name}}').functions.{{this.name}}(
             {{> params inputs=inputs}}
-        ).data
+        ).data;
         return abiEncodedTransactionData;
     },
     {{> callAsync}}

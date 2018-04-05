@@ -70,8 +70,8 @@ export class Deployer {
             data,
             gas,
         };
-        const abiW = contractNetworkDataIfExists.abi;
-        const abi = abiUtils.renameOverloadedMethods(abiW);
+        const abi = contractNetworkDataIfExists.abi;
+
         console.log('EEEEE');
         console.log(abi);
         console.log('EEEEE');

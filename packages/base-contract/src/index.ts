@@ -1,4 +1,4 @@
-import { ContractAbi, DataItem, TxData, TxDataPayable } from '@0xproject/types';
+import { AbiDefinition, AbiType, ContractAbi, DataItem, MethodAbi, TxData, TxDataPayable } from '@0xproject/types';
 import { abiUtils, BigNumber } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as ethersContracts from 'ethers-contracts';
@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import { formatABIDataItem } from './utils';
 
 export class BaseContract {
-    protected _ethersInterface: ethersContracts.Interface;
+    //protected _ethersInterface: ethersContracts.Interface;
     protected _web3Wrapper: Web3Wrapper;
     public abi: ContractAbi;
     public address: string;
@@ -49,10 +49,29 @@ export class BaseContract {
         }
         return txDataWithDefaults;
     }
+    protected _lookup(sig: string): ethersContracts.Interface {
+        const methodAbis = this.abi.filter((abi: AbiDefinition) => abi.type === AbiType.Function) as MethodAbi[];
+        const singleMethodAbis = _.transform(
+            methodAbis,
+            (result: MethodAbi[], ma) => {
+                if (abiUtils.getFunctionSignature(ma) === sig) {
+                    result.push(ma);
+                }
+            },
+            [],
+        );
+        if (singleMethodAbis.length !== 1) {
+            throw new Error(`Failed to lookup function ; with signature $; {sig; }`);
+        }
+        const ethersInterface = new ethersContracts.Interface(singleMethodAbis);
+        return ethersInterface;
+    }
     constructor(web3Wrapper: Web3Wrapper, abi: ContractAbi, address: string) {
         this._web3Wrapper = web3Wrapper;
-        this.abi = abiUtils.renameOverloadedMethods(abi);
+        this.abi = abi;
         this.address = address;
-        this._ethersInterface = new ethersContracts.Interface(this.abi);
+        console.log('New Cons');
+        //this._ethersInterface = new ethersContracts.Interface(abi);
+        //        console.log(this._ethersInterface.functions);
     }
 }
