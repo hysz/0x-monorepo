@@ -46,7 +46,6 @@ import { provider, web3Wrapper } from '../utils/web3_wrapper';
 chaiSetup.configure();
 const expect = chai.expect;
 const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
-const logDecoder = new LogDecoder(constants.TESTRPC_NETWORK_ID);
 
 describe('Exchange', () => {
     let makerAddress: string;
@@ -90,11 +89,11 @@ describe('Exchange', () => {
             deployer.deployAsync(ContractName.DummyERC721Token, constants.DUMMY_ERC721TOKEN_ARGS),
             deployer.deployAsync(ContractName.DummyERC721Token, constants.DUMMY_ERC721TOKEN_ARGS),
         ]);
-        rep = new DummyTokenContract(web3Wrapper, repInstance.abi, repInstance.address);
-        dgd = new DummyTokenContract(web3Wrapper, dgdInstance.abi, dgdInstance.address);
-        zrx = new DummyTokenContract(web3Wrapper, zrxInstance.abi, zrxInstance.address);
-        ck = new DummyERC721TokenContract(web3Wrapper, ckInstance.abi, ckInstance.address);
-        et = new DummyERC721TokenContract(web3Wrapper, etInstance.abi, etInstance.address);
+        rep = new DummyTokenContract(repInstance.abi, repInstance.address, provider);
+        dgd = new DummyTokenContract(dgdInstance.abi, dgdInstance.address, provider);
+        zrx = new DummyTokenContract(zrxInstance.abi, zrxInstance.address, provider);
+        ck = new DummyERC721TokenContract(ckInstance.abi, ckInstance.address, provider);
+        et = new DummyERC721TokenContract(etInstance.abi, etInstance.address, provider);
         const tokenTransferProxyInstance = await deployer.deployAsync(ContractName.TokenTransferProxy);
         tokenTransferProxy = new TokenTransferProxyContract(
             tokenTransferProxyInstance.abi,
@@ -106,30 +105,30 @@ describe('Exchange', () => {
             tokenTransferProxy.address,
         ]);
         erc20TransferProxyV1 = new ERC20TransferProxy_v1Contract(
-            web3Wrapper,
             erc20TransferProxyV1Instance.abi,
             erc20TransferProxyV1Instance.address,
+            provider,
         );
 
         const erc20TransferProxyInstance = await deployer.deployAsync(ContractName.ERC20TransferProxy);
         erc20TransferProxy = new ERC20TransferProxyContract(
-            web3Wrapper,
             erc20TransferProxyInstance.abi,
             erc20TransferProxyInstance.address,
+            provider,
         );
 
         erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
         erc721TransferProxy = new ERC721TransferProxyContract(
-            web3Wrapper,
             erc721TransferProxyInstance.abi,
             erc721TransferProxyInstance.address,
+            provider,
         );
 
         const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
         assetTransferProxy = new AssetTransferProxyContract(
-            web3Wrapper,
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
+            provider,
         );
 
         const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
@@ -1190,10 +1189,10 @@ describe('Exchange', () => {
                 balances[makerAddress][zrx.address].minus(signedOrder.makerFee),
             );
             expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
-                balances[takerAddress][zrx.address].minus(takerFee),
+                balances[takerAddress][zrx.address].minus(signedOrder.takerFee),
             );
             expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
-                balances[feeRecipientAddress][zrx.address].add(makerFee.add(takerFee)),
+                balances[feeRecipientAddress][zrx.address].add(signedOrder.makerFee.add(signedOrder.takerFee)),
             );
         });
 
@@ -1231,13 +1230,13 @@ describe('Exchange', () => {
                 balances[makerAddress][signedOrder.makerTokenAddress].minus(signedOrder.makerTokenAmount),
             );
             expect(newBalances[makerAddress][zrx.address]).to.be.bignumber.equal(
-                balances[makerAddress][zrx.address].minus(signedOrder.makerFeeAmount),
+                balances[makerAddress][zrx.address].minus(signedOrder.makerFee),
             );
             expect(newBalances[takerAddress][zrx.address]).to.be.bignumber.equal(
-                balances[takerAddress][zrx.address].minus(takerFee),
+                balances[takerAddress][zrx.address].minus(signedOrder.takerFee),
             );
             expect(newBalances[feeRecipientAddress][zrx.address]).to.be.bignumber.equal(
-                balances[feeRecipientAddress][zrx.address].add(makerFee.add(takerFee)),
+                balances[feeRecipientAddress][zrx.address].add(signedOrder.makerFee.add(signedOrder.takerFee)),
             );
         });
     });

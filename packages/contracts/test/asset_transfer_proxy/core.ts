@@ -21,7 +21,7 @@ import { constants } from '../../src/utils/constants';
 import { AssetProxyId, ContractName } from '../../src/utils/types';
 import { chaiSetup } from '../utils/chai_setup';
 import { deployer } from '../utils/deployer';
-import { web3, web3Wrapper } from '../utils/web3_wrapper';
+import { provider, web3Wrapper } from '../utils/web3_wrapper';
 
 chaiSetup.configure();
 const expect = chai.expect;
@@ -53,43 +53,43 @@ describe('AssetTransferProxy', () => {
         takerAddress = accounts[4];
         const tokenTransferProxyInstance = await deployer.deployAsync(ContractName.TokenTransferProxy);
         tokenTransferProxy = new TokenTransferProxyContract(
-            web3Wrapper,
             tokenTransferProxyInstance.abi,
             tokenTransferProxyInstance.address,
+            provider,
         );
 
         const erc20TransferProxyV1Instance = await deployer.deployAsync(ContractName.ERC20TransferProxy_V1, [
             tokenTransferProxy.address,
         ]);
         erc20TransferProxyV1 = new ERC20TransferProxy_v1Contract(
-            web3Wrapper,
             erc20TransferProxyV1Instance.abi,
             erc20TransferProxyV1Instance.address,
+            provider,
         );
 
         const erc20TransferProxyInstance = await deployer.deployAsync(ContractName.ERC20TransferProxy);
         erc20TransferProxy = new ERC20TransferProxyContract(
-            web3Wrapper,
             erc20TransferProxyInstance.abi,
             erc20TransferProxyInstance.address,
+            provider,
         );
 
         const erc721TransferProxyInstance = await deployer.deployAsync(ContractName.ERC721TransferProxy);
         erc721TransferProxy = new ERC721TransferProxyContract(
-            web3Wrapper,
             erc721TransferProxyInstance.abi,
             erc721TransferProxyInstance.address,
+            provider,
         );
 
         const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
         assetTransferProxy = new AssetTransferProxyContract(
-            web3Wrapper,
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
+            provider,
         );
 
         const zrxInstance = await deployer.deployAsync(ContractName.DummyToken, constants.DUMMY_TOKEN_ARGS);
-        zrx = new DummyTokenContract(web3Wrapper, zrxInstance.abi, zrxInstance.address);
+        zrx = new DummyTokenContract(zrxInstance.abi, zrxInstance.address, provider);
         await zrx.setBalance.sendTransactionAsync(makerAddress, INITIAL_BALANCE, { from: tokenOwner });
         await zrx.setBalance.sendTransactionAsync(takerAddress, INITIAL_BALANCE, { from: tokenOwner });
         dmyBalances = new Balances([zrx], [makerAddress, takerAddress]);
@@ -170,9 +170,9 @@ describe('AssetTransferProxy', () => {
             // Deploy a new version of the ERC20 Transfer Proxy contract
             const newErc20TransferProxyInstance = await deployer.deployAsync(ContractName.ERC20TransferProxy);
             const newErc20TransferProxy = new ERC20TransferProxyContract(
-                web3Wrapper,
                 newErc20TransferProxyInstance.abi,
                 newErc20TransferProxyInstance.address,
+                provider,
             );
 
             const newAddress = newErc20TransferProxy.address;

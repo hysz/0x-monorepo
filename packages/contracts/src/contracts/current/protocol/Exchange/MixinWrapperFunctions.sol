@@ -105,8 +105,6 @@ contract MixinWrapperFunctions is
         bytes4 fillOrderSelector = this.fillOrder.selector;
 
         assembly {
-            // Load free memory pointer
-            let freeMemoryStart := mload(0x40)
 
             // Areas below may use the following variables:
             //   1. <area>Start   -- Start of this area in memory
@@ -118,7 +116,8 @@ contract MixinWrapperFunctions is
             //                       offsets of contents as they are written.
 
             /////// Setup Header Area ///////
-            let headerAreaStart := freeMemoryStart
+            // Load free memory pointer
+            let headerAreaStart := mload(0x40)
             mstore(headerAreaStart, fillOrderSelector)
             let headerAreaEnd := add(headerAreaStart, 0x4)
 
@@ -232,10 +231,10 @@ contract MixinWrapperFunctions is
                 mstore(add(fillResults, 96), 0)
             }
             case 1 {
-                mstore(fillResults, mload(start))
-                mstore(add(fillResults, 32), mload(add(start, 32)))
-                mstore(add(fillResults, 64), mload(add(start, 64)))
-                mstore(add(fillResults, 96), mload(add(start, 96)))
+                mstore(fillResults, mload(headerAreaStart))
+                mstore(add(fillResults, 32), mload(add(headerAreaStart, 32)))
+                mstore(add(fillResults, 64), mload(add(headerAreaStart, 64)))
+                mstore(add(fillResults, 96), mload(add(headerAreaStart, 96)))
             }
         }
         return fillResults;

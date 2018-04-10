@@ -81,21 +81,21 @@ describe('Exchange', () => {
             tokenTransferProxy.address,
         ]);
         erc20TransferProxyV1 = new ERC20TransferProxy_v1Contract(
-            web3Wrapper,
             erc20TransferProxyV1Instance.abi,
             erc20TransferProxyV1Instance.address,
+            provider,
         );
         const erc20TransferProxyInstance = await deployer.deployAsync(ContractName.ERC20TransferProxy);
         erc20TransferProxy = new ERC20TransferProxyContract(
-            web3Wrapper,
             erc20TransferProxyInstance.abi,
             erc20TransferProxyInstance.address,
+            provider,
         );
         const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
         assetTransferProxy = new AssetTransferProxyContract(
-            web3Wrapper,
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
+            provider,
         );
         const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
             zrx.address,
