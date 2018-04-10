@@ -39,7 +39,7 @@ describe('Asset Transfer Proxies', () => {
     let ck: DummyERC721TokenContract;
     let dmyBalances: Balances;
     let tokenTransferProxy: TokenTransferProxyContract;
-    let assetTransferProxy: AssetProxyDispatcherContract;
+    let assetProxyDispatcher: AssetProxyDispatcherContract;
     let erc20TransferProxyV1: ERC20TransferProxy_v1Contract;
     let erc20TransferProxy: ERC20TransferProxyContract;
     let erc721TransferProxy: ERC721TransferProxyContract;
@@ -84,10 +84,10 @@ describe('Asset Transfer Proxies', () => {
             provider,
         );
 
-        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
-        assetTransferProxy = new AssetProxyDispatcherContract(
-            assetTransferProxyInstance.abi,
-            assetTransferProxyInstance.address,
+        const assetProxyDispatcherInstance = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
+        assetProxyDispatcher = new AssetProxyDispatcherContract(
+            assetProxyDispatcherInstance.abi,
+            assetProxyDispatcherInstance.address,
             provider,
         );
 
@@ -114,7 +114,7 @@ describe('Asset Transfer Proxies', () => {
         await ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, { from: makerAddress });
         await ck.setApprovalForAll.sendTransactionAsync(erc721TransferProxy.address, true, { from: takerAddress });
         await ck.mint.sendTransactionAsync(makerAddress, makerTokenId, { from: tokenOwner });
-        await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, {
+        await assetProxyDispatcher.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, {
             from: accounts[0],
         });
         await erc20TransferProxyV1.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, {

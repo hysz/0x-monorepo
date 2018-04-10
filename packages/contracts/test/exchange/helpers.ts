@@ -39,7 +39,7 @@ describe('Exchange', () => {
         [makerAddress, feeRecipientAddress, assetProxyManagerAddress] = accounts;
         const tokenRegistry = await deployer.deployAsync(ContractName.TokenRegistry);
         const tokenTransferProxy = await deployer.deployAsync(ContractName.TokenTransferProxy);
-        const assetTransferProxy = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
+        const assetProxyDispatcher = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
         const erc20TransferProxyV1 = await deployer.deployAsync(ContractName.ERC20TransferProxy_V1, [
             tokenTransferProxy.address,
         ]);
@@ -52,30 +52,30 @@ describe('Exchange', () => {
         const exchangeInstance = await deployer.deployAsync(ContractName.Exchange, [
             zrx.address,
             AssetProxyId.ERC20,
-            assetTransferProxy.address,
+            assetProxyDispatcher.address,
         ]);
         const exchange = new ExchangeContract(exchangeInstance.abi, exchangeInstance.address, provider);
-        await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, {
+        await assetProxyDispatcher.addAuthorizedAddress.sendTransactionAsync(assetProxyManagerAddress, {
             from: accounts[0],
         });
-        await assetTransferProxy.addAuthorizedAddress.sendTransactionAsync(exchange.address, { from: accounts[0] });
-        await erc20TransferProxyV1.addAuthorizedAddress.sendTransactionAsync(assetTransferProxy.address, {
+        await assetProxyDispatcher.addAuthorizedAddress.sendTransactionAsync(exchange.address, { from: accounts[0] });
+        await erc20TransferProxyV1.addAuthorizedAddress.sendTransactionAsync(assetProxyDispatcher.address, {
             from: accounts[0],
         });
-        await erc20TransferProxy.addAuthorizedAddress.sendTransactionAsync(assetTransferProxy.address, {
+        await erc20TransferProxy.addAuthorizedAddress.sendTransactionAsync(assetProxyDispatcher.address, {
             from: accounts[0],
         });
         await tokenTransferProxy.addAuthorizedAddress.sendTransactionAsync(erc20TransferProxyV1.address, {
             from: accounts[0],
         });
         const nilAddress = '0x0000000000000000000000000000000000000000';
-        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
+        await assetProxyDispatcher.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20_V1,
             erc20TransferProxyV1.address,
             nilAddress,
             { from: accounts[0] },
         );
-        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
+        await assetProxyDispatcher.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20,
             erc20TransferProxy.address,
             nilAddress,

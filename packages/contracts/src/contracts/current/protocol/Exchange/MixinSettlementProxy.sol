@@ -55,13 +55,13 @@ contract MixinSettlementProxy is
     }
 
     function MixinSettlementProxy(
-        IAssetProxyDispatcher assetTransferProxyContract,
+        IAssetProxyDispatcher assetProxyDispatcherContract,
         IToken zrxToken,
         bytes zrxProxyMetadata)
         public
     {
         ZRX_TOKEN = zrxToken;
-        TRANSFER_PROXY = assetTransferProxyContract;
+        TRANSFER_PROXY = assetProxyDispatcherContract;
         ZRX_PROXY_METADATA = zrxProxyMetadata;
     }
 
