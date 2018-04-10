@@ -1,3 +1,4 @@
+import { LogWithDecodedArgs, TransactionReceiptWithDecodedLogs, ZeroEx } from '0x.js';
 import { BlockchainLifecycle, devConstants, web3Factory } from '@0xproject/dev-utils';
 import { BigNumber } from '@0xproject/utils';
 import { Web3Wrapper } from '@0xproject/web3-wrapper';
@@ -198,7 +199,7 @@ describe('AssetTransferProxy', () => {
             expect(proxyAddress).to.be.equal(erc20TransferProxy.address);
 
             // The following transaction will throw because the currentAddress is no longer nilAddress
-            expect(
+            return expect(
                 assetTransferProxy.registerAssetProxy.sendTransactionAsync(
                     AssetProxyId.ERC20,
                     erc20TransferProxy.address,
@@ -219,7 +220,7 @@ describe('AssetTransferProxy', () => {
             expect(proxyAddress).to.be.equal(erc20TransferProxy.address);
 
             // The following transaction will throw because we cannot register a proxy with the nilAddress
-            expect(
+            return expect(
                 assetTransferProxy.registerAssetProxy.sendTransactionAsync(
                     AssetProxyId.ERC20,
                     nilAddress,
@@ -230,7 +231,7 @@ describe('AssetTransferProxy', () => {
         });
 
         it('should throw if requesting address is not authorized', async () => {
-            expect(
+            return expect(
                 assetTransferProxy.registerAssetProxy.sendTransactionAsync(
                     AssetProxyId.ERC20,
                     erc20TransferProxy.address,
@@ -254,7 +255,9 @@ describe('AssetTransferProxy', () => {
         });
 
         it('should throw if requesting non-existent proxy', async () => {
-            expect(assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20)).to.be.rejectedWith(constants.REVERT);
+            return expect(assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20)).to.be.rejectedWith(
+                constants.REVERT,
+            );
         });
     });
 
@@ -294,7 +297,7 @@ describe('AssetTransferProxy', () => {
         });
 
         it('should throw when deregistering a proxy that is not registered', async () => {
-            expect(
+            return expect(
                 assetTransferProxy.deregisterAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, {
                     from: assetProxyManagerAddress,
                 }),
@@ -313,11 +316,13 @@ describe('AssetTransferProxy', () => {
             await assetTransferProxy.deregisterAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, {
                 from: assetProxyManagerAddress,
             });
-            expect(assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20)).to.be.rejectedWith(constants.REVERT);
+            return expect(assetTransferProxy.getAssetProxy.callAsync(AssetProxyId.ERC20)).to.be.rejectedWith(
+                constants.REVERT,
+            );
         });
 
         it('should throw if requesting address is not authorized', async () => {
-            expect(
+            return expect(
                 assetTransferProxy.deregisterAssetProxy.sendTransactionAsync(AssetProxyId.ERC20, { from: notOwner }),
             ).to.be.rejectedWith(constants.REVERT);
         });
@@ -364,7 +369,7 @@ describe('AssetTransferProxy', () => {
             // Perform a transfer from makerAddress to takerAddress
             const balances = await dmyBalances.getAsync();
             const amount = new BigNumber(10);
-            expect(
+            return expect(
                 assetTransferProxy.transferFrom.sendTransactionAsync(
                     encodedProxyMetadata,
                     makerAddress,
@@ -390,7 +395,7 @@ describe('AssetTransferProxy', () => {
             // Perform a transfer from makerAddress to takerAddress
             const balances = await dmyBalances.getAsync();
             const amount = new BigNumber(10);
-            expect(
+            return expect(
                 assetTransferProxy.transferFrom.sendTransactionAsync(
                     encodedProxyMetadata,
                     makerAddress,

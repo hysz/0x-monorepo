@@ -140,8 +140,8 @@ describe('Exchange', () => {
             takerTokenAddress: dgd.address,
             makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(100), 18),
             takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
-            makerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
-            takerFeeAmount: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
+            makerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
+            takerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
             makerAssetProxyData: encodeERC20ProxyMetadata(rep.address),
             takerAssetProxyData: encodeERC20ProxyMetadata(dgd.address),
         };
@@ -312,11 +312,11 @@ describe('Exchange', () => {
 
         it('should not change balances if maker allowances are too low to fill order', async () => {
             const signedOrder = orderFactory.newSignedOrder();
-            await rep.approve.sendTransactionAsync(tokenTransferProxy.address, new BigNumber(0), {
+            await rep.approve.sendTransactionAsync(erc20TransferProxy.address, new BigNumber(0), {
                 from: makerAddress,
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
-            await rep.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
+            await rep.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
                 from: makerAddress,
             });
 
@@ -326,11 +326,11 @@ describe('Exchange', () => {
 
         it('should not change balances if taker allowances are too low to fill order', async () => {
             const signedOrder = orderFactory.newSignedOrder();
-            await dgd.approve.sendTransactionAsync(tokenTransferProxy.address, new BigNumber(0), {
+            await dgd.approve.sendTransactionAsync(erc20TransferProxy.address, new BigNumber(0), {
                 from: takerAddress,
             });
             await exWrapper.fillOrderNoThrowAsync(signedOrder, takerAddress);
-            await dgd.approve.sendTransactionAsync(tokenTransferProxy.address, INITIAL_ALLOWANCE, {
+            await dgd.approve.sendTransactionAsync(erc20TransferProxy.address, INITIAL_ALLOWANCE, {
                 from: takerAddress,
             });
 
@@ -352,7 +352,7 @@ describe('Exchange', () => {
         });
 
         it('should not change balances if makerTokenAddress is ZRX, makerTokenAmount + makerFee > maker allowance', async () => {
-            const makerZRXAllowance = await zrx.allowance.callAsync(makerAddress, tokenTransferProxy.address);
+            const makerZRXAllowance = await zrx.allowance.callAsync(makerAddress, erc20TransferProxy.address);
             const signedOrder = orderFactory.newSignedOrder({
                 makerTokenAddress: zrx.address,
                 makerTokenAmount: new BigNumber(makerZRXAllowance),
@@ -378,7 +378,7 @@ describe('Exchange', () => {
         });
 
         it('should not change balances if takerTokenAddress is ZRX, takerTokenAmount + takerFee > taker allowance', async () => {
-            const takerZRXAllowance = await zrx.allowance.callAsync(takerAddress, tokenTransferProxy.address);
+            const takerZRXAllowance = await zrx.allowance.callAsync(takerAddress, erc20TransferProxy.address);
             const signedOrder = orderFactory.newSignedOrder({
                 takerTokenAddress: zrx.address,
                 takerTokenAmount: new BigNumber(takerZRXAllowance),
