@@ -25,16 +25,10 @@ contract IAssetTransferProxy is
     IAuthorizable
 {
     // Logs registration of new asset proxy
-    event LogAssetProxyRegistration(
+    event LogAssetProxyChanged(
         uint8 id,
         address newAssetClassAddress,
         address oldAssetClassAddress
-    );
-
-    // Logs deregistration of an existing asset proxy
-    event LogAssetProxyDeregistration(
-        uint8 id,
-        address assetClassAddress
     );
 
     /// @dev Delegates transfer to the corresponding asset proxy.

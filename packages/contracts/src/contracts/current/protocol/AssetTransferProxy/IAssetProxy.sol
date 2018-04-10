@@ -20,7 +20,7 @@ pragma solidity ^0.4.21;
 
 contract IAssetProxy {
 
-    /// @dev Transfers assets.
+    /// @dev Transfers assets. Either succeeds or throws.
     /// @param assetMetadata Byte array encoded for the respective asset proxy.
     /// @param from Address to transfer token from.
     /// @param to Address to transfer token to.
