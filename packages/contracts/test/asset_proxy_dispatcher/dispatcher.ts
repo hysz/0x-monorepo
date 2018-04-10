@@ -259,7 +259,7 @@ describe('AssetProxyDispatcher', () => {
     });
 
     describe('transferFrom', () => {
-        it('should delegate transfer to registered proxy', async () => {
+        it('should dispatch  transfer to registered proxy', async () => {
             // Register ERC20 proxy
             await assetProxyDispatcher.setAssetProxy.sendTransactionAsync(
                 AssetProxyId.ERC20,
