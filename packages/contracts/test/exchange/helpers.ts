@@ -10,7 +10,7 @@ import {
     encodeERC20ProxyMetadata,
     encodeERC20ProxyMetadata_V1,
     encodeERC721ProxyMetadata,
-} from '../../src/utils/asset_transfer_proxy_utils';
+} from '../../src/utils/asset_proxy_utils';
 import { constants } from '../../src/utils/constants';
 import { ExchangeWrapper } from '../../src/utils/exchange_wrapper';
 import { OrderFactory } from '../../src/utils/order_factory';
@@ -39,7 +39,7 @@ describe('Exchange', () => {
         [makerAddress, feeRecipientAddress, assetProxyManagerAddress] = accounts;
         const tokenRegistry = await deployer.deployAsync(ContractName.TokenRegistry);
         const tokenTransferProxy = await deployer.deployAsync(ContractName.TokenTransferProxy);
-        const assetTransferProxy = await deployer.deployAsync(ContractName.AssetTransferProxy);
+        const assetTransferProxy = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
         const erc20TransferProxyV1 = await deployer.deployAsync(ContractName.ERC20TransferProxy_V1, [
             tokenTransferProxy.address,
         ]);
@@ -69,17 +69,17 @@ describe('Exchange', () => {
             from: accounts[0],
         });
         const nilAddress = '0x0000000000000000000000000000000000000000';
-        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(
+        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20_V1,
             erc20TransferProxyV1.address,
             nilAddress,
-            { from: assetProxyManagerAddress },
+            { from: accounts[0] },
         );
-        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(
+        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20,
             erc20TransferProxy.address,
             nilAddress,
-            { from: assetProxyManagerAddress },
+            { from: accounts[0] },
         );
         const zeroEx = new ZeroEx(provider, { networkId: constants.TESTRPC_NETWORK_ID });
         exchangeWrapper = new ExchangeWrapper(exchange, zeroEx);

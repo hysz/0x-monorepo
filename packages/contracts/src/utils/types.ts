@@ -109,7 +109,7 @@ export enum ContractName {
     AccountLevels = 'AccountLevels',
     EtherDelta = 'EtherDelta',
     Arbitrage = 'Arbitrage',
-    AssetTransferProxy = 'AssetTransferProxy',
+    AssetProxyDispatcher = 'AssetProxyDispatcher',
     ERC20TransferProxy = 'ERC20TransferProxy',
     ERC20TransferProxy_V1 = 'ERC20TransferProxy_v1',
     ERC721TransferProxy = 'ERC721TransferProxy',

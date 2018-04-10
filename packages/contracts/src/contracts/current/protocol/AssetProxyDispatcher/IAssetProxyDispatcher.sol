@@ -21,8 +21,9 @@ pragma solidity ^0.4.21;
 import "./IAssetProxy.sol";
 import "../../utils/Authorizable/IAuthorizable.sol";
 
-contract IAssetTransferProxy is
-    IAuthorizable
+contract IAssetProxyDispatcher is
+    IAuthorizable,
+    IAssetProxy
 {
     // Logs registration of new asset proxy
     event LogAssetProxyChanged(
@@ -31,23 +32,11 @@ contract IAssetTransferProxy is
         address oldAssetClassAddress
     );
 
-    /// @dev Delegates transfer to the corresponding asset proxy.
-    /// @param assetMetadata Byte array encoded for the respective asset proxy.
-    /// @param from Address to transfer token from.
-    /// @param to Address to transfer token to.
-    /// @param amount Amount of token to transfer.
-    function transferFrom(
-        bytes assetMetadata,
-        address from,
-        address to,
-        uint256 amount)
-        public;
-
-    /// @dev Registers a new asset proxy.
+    /// @dev Sets a new asset proxy.
     /// @param assetProxyId Id of the asset proxy.
     /// @param newAssetProxyAddress Address of the asset proxy contract to register.
     /// @param currentAssetProxyAddress Address of existing asset proxy to overwrite.
-    function registerAssetProxy(
+    function setAssetProxy(
         uint8 assetProxyId,
         address newAssetProxyAddress,
         address currentAssetProxyAddress)
@@ -55,20 +44,8 @@ contract IAssetTransferProxy is
 
     /// @dev Gets an asset proxy.
     /// @param assetProxyId Id of the asset proxy.
-    /// @return The asset proxy registered to assetProxyId.
+    /// @return The asset proxy registered to assetProxyId. Returns 0x0 if no proxy is registered.
     function getAssetProxy(uint8 assetProxyId)
         public view
         returns (IAssetProxy);
-
-    /// @dev Returns true if an asset proxy is registered.
-    /// @param assetProxyId Id of the asset proxy.
-    /// @return True if an asset proxy is registered. False, otherwise.
-    function isAssetProxyRegistered(uint8 assetProxyId)
-        public view
-        returns (bool);
-
-    /// @dev Deregisters an asset proxy.
-    /// @param assetProxyId Id of the asset proxy to deregister.
-    function deregisterAssetProxy(uint8 assetProxyId)
-        public;
 }

@@ -18,15 +18,15 @@
 
 pragma solidity ^0.4.21;
 
-import "./IAssetTransferProxy.sol";
+import "./IAssetProxyDispatcher.sol";
 import "./IAssetProxy.sol";
 import "../../utils/Ownable/Ownable.sol";
 import "../../utils/Authorizable/Authorizable.sol";
 
-contract AssetTransferProxy is
+contract AssetProxyDispatcher is
     Ownable,
     Authorizable,
-    IAssetTransferProxy
+    IAssetProxyDispatcher
 {
     // Mapping from Asset Proxy Id's to their respective Asset Proxy
     mapping (uint8 => IAssetProxy) public assetProxies;
@@ -75,7 +75,7 @@ contract AssetTransferProxy is
 
     /// @dev Gets an asset proxy.
     /// @param assetProxyId Id of the asset proxy.
-    /// @return The asset proxy registered to assetProxyId.
+    /// @return The asset proxy registered to assetProxyId. Returns 0x0 if no proxy is registered.
     function getAssetProxy(uint8 assetProxyId)
         public view
         returns (IAssetProxy)

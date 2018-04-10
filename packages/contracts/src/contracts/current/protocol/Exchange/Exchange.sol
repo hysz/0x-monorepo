@@ -23,7 +23,7 @@ import "./MixinExchangeCore.sol";
 import "./MixinSignatureValidator.sol";
 import "./MixinSettlementProxy.sol";
 import "./MixinWrapperFunctions.sol";
-import "../AssetTransferProxy/IAssetTransferProxy.sol";
+import "../AssetProxyDispatcher/IAssetProxyDispatcher.sol";
 import "../TokenTransferProxy/ITokenTransferProxy.sol";
 
 contract Exchange is
@@ -37,7 +37,7 @@ contract Exchange is
     function Exchange(
         IToken _zrxToken,
         bytes _zrxProxyMetadata,
-        IAssetTransferProxy _assetTransferProxy)
+        IAssetProxyDispatcher _assetTransferProxy)
         public
         MixinExchangeCore()
         MixinSignatureValidator()

@@ -6,7 +6,7 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as Web3 from 'web3';
 
-import { AssetTransferProxyContract } from '../../src/contract_wrappers/generated/asset_transfer_proxy';
+import { AssetProxyDispatcherContract } from '../../src/contract_wrappers/generated/asset_proxy_dispatcher';
 import { DummyTokenContract } from '../../src/contract_wrappers/generated/dummy_token';
 import { ERC20TransferProxyContract } from '../../src/contract_wrappers/generated/e_r_c20_transfer_proxy';
 import { ERC20TransferProxy_v1Contract } from '../../src/contract_wrappers/generated/erc20transferproxy_v1';
@@ -17,7 +17,7 @@ import {
     encodeERC20ProxyMetadata,
     encodeERC20ProxyMetadata_V1,
     encodeERC721ProxyMetadata,
-} from '../../src/utils/asset_transfer_proxy_utils';
+} from '../../src/utils/asset_proxy_utils';
 import { Balances } from '../../src/utils/balances';
 import { constants } from '../../src/utils/constants';
 import { ExchangeWrapper } from '../../src/utils/exchange_wrapper';
@@ -47,7 +47,7 @@ describe('Exchange', () => {
     let exchange: ExchangeContract;
     let tokenRegistry: TokenRegistryContract;
     let tokenTransferProxy: TokenTransferProxyContract;
-    let assetTransferProxy: AssetTransferProxyContract;
+    let assetTransferProxy: AssetProxyDispatcherContract;
     let erc20TransferProxyV1: ERC20TransferProxy_v1Contract;
     let erc20TransferProxy: ERC20TransferProxyContract;
 
@@ -91,8 +91,8 @@ describe('Exchange', () => {
             erc20TransferProxyInstance.address,
             provider,
         );
-        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
-        assetTransferProxy = new AssetTransferProxyContract(
+        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
+        assetTransferProxy = new AssetProxyDispatcherContract(
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
             provider,
@@ -117,17 +117,17 @@ describe('Exchange', () => {
             from: accounts[0],
         });
         const nilAddress = '0x0000000000000000000000000000000000000000';
-        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(
+        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20_V1,
             erc20TransferProxyV1.address,
             nilAddress,
-            { from: assetProxyManagerAddress },
+            { from: accounts[0] },
         );
-        await assetTransferProxy.registerAssetProxy.sendTransactionAsync(
+        await assetTransferProxy.setAssetProxy.sendTransactionAsync(
             AssetProxyId.ERC20,
             erc20TransferProxy.address,
             nilAddress,
-            { from: assetProxyManagerAddress },
+            { from: accounts[0] },
         );
         const zeroEx = new ZeroEx(provider, { networkId: constants.TESTRPC_NETWORK_ID });
         exWrapper = new ExchangeWrapper(exchange, zeroEx);

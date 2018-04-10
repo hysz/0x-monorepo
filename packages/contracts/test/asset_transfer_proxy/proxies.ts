@@ -5,7 +5,7 @@ import { Web3Wrapper } from '@0xproject/web3-wrapper';
 import * as chai from 'chai';
 import * as Web3 from 'web3';
 
-import { AssetTransferProxyContract } from '../../src/contract_wrappers/generated/asset_transfer_proxy';
+import { AssetProxyDispatcherContract } from '../../src/contract_wrappers/generated/asset_proxy_dispatcher';
 import { DummyERC721TokenContract } from '../../src/contract_wrappers/generated/dummy_e_r_c721_token';
 import { DummyTokenContract } from '../../src/contract_wrappers/generated/dummy_token';
 import { ERC20TransferProxyContract } from '../../src/contract_wrappers/generated/e_r_c20_transfer_proxy';
@@ -16,7 +16,7 @@ import {
     encodeERC20ProxyMetadata,
     encodeERC20ProxyMetadata_V1,
     encodeERC721ProxyMetadata,
-} from '../../src/utils/asset_transfer_proxy_utils';
+} from '../../src/utils/asset_proxy_utils';
 import { Balances } from '../../src/utils/balances';
 import { constants } from '../../src/utils/constants';
 import { AssetProxyId, ContractName } from '../../src/utils/types';
@@ -39,7 +39,7 @@ describe('Asset Transfer Proxies', () => {
     let ck: DummyERC721TokenContract;
     let dmyBalances: Balances;
     let tokenTransferProxy: TokenTransferProxyContract;
-    let assetTransferProxy: AssetTransferProxyContract;
+    let assetTransferProxy: AssetProxyDispatcherContract;
     let erc20TransferProxyV1: ERC20TransferProxy_v1Contract;
     let erc20TransferProxy: ERC20TransferProxyContract;
     let erc721TransferProxy: ERC721TransferProxyContract;
@@ -84,8 +84,8 @@ describe('Asset Transfer Proxies', () => {
             provider,
         );
 
-        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetTransferProxy);
-        assetTransferProxy = new AssetTransferProxyContract(
+        const assetTransferProxyInstance = await deployer.deployAsync(ContractName.AssetProxyDispatcher);
+        assetTransferProxy = new AssetProxyDispatcherContract(
             assetTransferProxyInstance.abi,
             assetTransferProxyInstance.address,
             provider,
