@@ -23,7 +23,7 @@ import "./MixinExchangeCore.sol";
 import "./MixinSignatureValidator.sol";
 import "./MixinSettlementProxy.sol";
 import "./MixinWrapperFunctions.sol";
-import "./AssetTransferProxy/IAssetTransferProxy.sol";
+import "../AssetTransferProxy/IAssetTransferProxy.sol";
 import "../TokenTransferProxy/ITokenTransferProxy.sol";
 
 contract Exchange is
