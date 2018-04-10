@@ -51,7 +51,7 @@ contract ERC721TransferProxy is
         // There exists only 1 of each token.
         require(amount == 1);
 
-        // Delegate call to ERC721 contract
+        // Call ERC721 contract. Either succeeds or throws.
         ERC721Token(token).transferFrom(from, to, tokenId);
     }
 

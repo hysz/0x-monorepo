@@ -26,7 +26,7 @@ contract IAssetProxyDispatcher is
     IAssetProxy
 {
     // Logs registration of new asset proxy
-    event LogAssetProxyChanged(
+    event AssetProxyChanged(
         uint8 id,
         address newAssetClassAddress,
         address oldAssetClassAddress

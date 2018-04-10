@@ -52,7 +52,8 @@ contract ERC20TransferProxy_v1 is
         onlyAuthorized
     {
         address token = decodeMetadata(assetMetadata);
-        require(TRANSFER_PROXY.transferFrom(token, from, to, amount));
+        bool success = TRANSFER_PROXY.transferFrom(token, from, to, amount);
+        require(success == true);
     }
 
     /// @dev Encodes ERC20 byte array for the ERC20 asset proxy.
