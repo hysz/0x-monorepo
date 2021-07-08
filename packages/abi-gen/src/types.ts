@@ -5,13 +5,6 @@ export enum ParamKind {
     Output = 'output',
 }
 
-export enum AbiType {
-    Function = 'function',
-    Constructor = 'constructor',
-    Event = 'event',
-    Fallback = 'fallback',
-}
-
 export enum ContractsBackend {
     Web3 = 'web3',
     Ethers = 'ethers',
